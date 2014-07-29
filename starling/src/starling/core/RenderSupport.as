@@ -71,7 +71,9 @@ package starling.core
         
         private var mQuadBatches:Vector.<QuadBatch>;
         private var mCurrentQuadBatchID:int;
-
+		
+		private var mSaturated:Boolean;
+        
         /** helper objects */
         private static var sPoint:Point = new Point();
         private static var sPoint3D:Vector3D = new Vector3D();
@@ -104,6 +106,7 @@ package starling.core
             mRenderTarget = null;
             mBlendMode = BlendMode.NORMAL;
             mClipRectStack = new <Rectangle>[];
+			mSaturated = true;
             
             mCurrentQuadBatchID = 0;
             mQuadBatches = new <QuadBatch>[new QuadBatch()];
@@ -524,14 +527,14 @@ package starling.core
         public function batchQuad(quad:Quad, parentAlpha:Number, 
                                   texture:Texture=null, smoothing:String=null):void
         {
-            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(quad.tinted, parentAlpha, texture, 
+            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(quad.saturated && mSaturated, quad.tinted, parentAlpha, texture, 
                                                                 smoothing, mBlendMode))
             {
                 finishQuadBatch();
             }
             
             mQuadBatches[mCurrentQuadBatchID].addQuad(quad, parentAlpha, texture, smoothing, 
-                                                      mModelViewMatrix, mBlendMode);
+                                                      mModelViewMatrix, mBlendMode, quad.saturated && mSaturated);
         }
         
         /** Adds a batch of quads to the current batch of unrendered quads. If there is a state 
@@ -542,14 +545,14 @@ package starling.core
          *  expensive than what you save by avoiding the draw call.</p> */
         public function batchQuadBatch(quadBatch:QuadBatch, parentAlpha:Number):void
         {
-            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(
+            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(quadBatch.saturated && mSaturated,
                 quadBatch.tinted, parentAlpha, quadBatch.texture, quadBatch.smoothing, mBlendMode))
             {
                 finishQuadBatch();
             }
             
             mQuadBatches[mCurrentQuadBatchID].addQuadBatch(quadBatch, parentAlpha, 
-                                                           mModelViewMatrix, mBlendMode);
+                                                           mModelViewMatrix, mBlendMode, quadBatch.saturated && mSaturated);
         }
         
         /** Renders the current quad batch and resets it. */
@@ -590,6 +593,7 @@ package starling.core
             mCurrentQuadBatchID = 0;
             mBlendMode = BlendMode.NORMAL;
             mDrawCount = 0;
+			mSaturated = true;
         }
 
         /** Disposes redundant quad batches if the number of allocated batches is more than
@@ -689,5 +693,9 @@ package starling.core
         
         /** Indicates the number of stage3D draw calls. */
         public function get drawCount():int { return mDrawCount; }
+		
+		/** saturation (true|false) */
+		public function get saturated():Boolean { return mSaturated; }
+		public function set saturated(value:Boolean):void { mSaturated = value; }
     }
 }

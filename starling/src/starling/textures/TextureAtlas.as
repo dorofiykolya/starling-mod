@@ -79,19 +79,59 @@ package starling.textures
         private static var sNames:Vector.<String> = new <String>[];
         
         /** Create a texture atlas from a texture by parsing the regions from an XML file. */
-        public function TextureAtlas(texture:Texture, atlasXml:XML=null)
+        public function TextureAtlas(texture:Texture, atlasXml:Object=null)
         {
             mSubTextures = new Dictionary();
             mAtlasTexture = texture;
             
             if (atlasXml)
-                parseAtlasXml(atlasXml);
+			{	
+				if (atlasXml is XML)
+                {
+					parseAtlasXml(XML(atlasXml));
+				}
+				else if (atlasXml is ByteArray)
+				{
+					parseAtlasBin(ByteArray(atlasXml));
+				}
+			}
         }
         
         /** Disposes the atlas texture. */
         public function dispose():void
         {
             mAtlasTexture.dispose();
+        }
+		
+		/** This function is called by the constructor and will parse an binary in Starling's 
+         *  default atlas file format. Override this method to create custom parsing logic
+         *  (e.g. to support a different file format). */
+		protected function parseAtlasBin(bytes:ByteArray):void
+        {
+            var scale:Number = mAtlasTexture.scale;
+			
+			bytes.position = 0;
+			var count:int = bytes.readInt();
+			
+			for (var i:int = 0; i < count; i++) 
+			{
+				var charLength:int 		= bytes.readInt();
+				var name:String			= bytes.readUTFBytes(charLength);
+                var x:Number   			= bytes.readFloat() / scale;
+                var y:Number   			= bytes.readFloat() / scale;
+                var width:Number		= bytes.readFloat() / scale;
+                var height:Number		= bytes.readFloat() / scale;
+                var frameX:Number		= bytes.readFloat() / scale;
+                var frameY:Number		= bytes.readFloat() / scale;
+                var frameWidth:Number  	= bytes.readFloat() / scale;
+                var frameHeight:Number 	= bytes.readFloat() / scale;
+				
+                var region:Rectangle = new Rectangle(x, y, width, height);
+                var frame:Rectangle  = frameWidth > 0 && frameHeight > 0 ?
+                        new Rectangle(frameX, frameY, frameWidth, frameHeight) : null;
+						
+                addRegion(name, region, frame);
+			}
         }
         
         /** This function is called by the constructor and will parse an XML in Starling's 

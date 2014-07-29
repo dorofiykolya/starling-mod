@@ -263,7 +263,7 @@ package starling.core
             mViewPort = viewPort;
             mPreviousViewPort = new Rectangle();
             mStage3D = stage3D;
-            mStage = new Stage(viewPort.width, viewPort.height, stage.color);
+            mStage = new Stage(this, viewPort.width, viewPort.height, stage.color);
             mNativeOverlay = new Sprite();
             mNativeStage = stage;
             mNativeStage.addChild(mNativeOverlay);

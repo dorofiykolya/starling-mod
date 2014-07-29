@@ -150,6 +150,18 @@ package starling.utils
             mNumVertices += data.numVertices;
             mRawData.fixed = true;
         }
+		
+		/** Remove the vertices from current VertexData object. */
+		public function remove(startVertexID:int, count:int):void
+		{
+			if (count > 0)
+			{
+				mRawData.fixed = false;
+				mRawData.splice(startVertexID * ELEMENTS_PER_VERTEX, count * ELEMENTS_PER_VERTEX);
+				mNumVertices -= count;
+				mRawData.fixed = true;
+			}
+		}
         
         // functions
         
@@ -183,6 +195,18 @@ package starling.utils
             mRawData[int(offset+2)] = ( color        & 0xff) / 255.0 * multiplier;
             mRawData[int(offset+3)] = alpha;
         }
+		
+		/** Updates the raw RGB color and raw alpha value of a vertex in one step. */
+		public function setRawColorAndAlpha(vertexID:int, red:Number, green:Number, blue:Number, alpha:Number):void
+		{
+			if (alpha < 0.001)    alpha = 0.001; // zero alpha would wipe out all color data
+            var offset:int = vertexID * ELEMENTS_PER_VERTEX + COLOR_OFFSET;
+            
+            mRawData[offset]        = red;
+            mRawData[int(offset+1)] = green;
+            mRawData[int(offset+2)] = blue;
+            mRawData[int(offset+3)] = alpha;
+		}
         
         /** Updates the RGB color values of a vertex (alpha is not changed). */
         public function setColor(vertexID:int, color:uint):void

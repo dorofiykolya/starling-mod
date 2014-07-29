@@ -65,13 +65,16 @@ package starling.display
         private var mCameraPosition:Vector3D;
         private var mEnterFrameEvent:EnterFrameEvent;
         private var mEnterFrameListeners:Vector.<DisplayObject>;
+		private var mStarling:Starling;
+		private var mBroadcastEnterFrameEvent:Boolean;
         
         /** Helper objects. */
         private static var sHelperMatrix:Matrix3D = new Matrix3D();
 
         /** @private */
-        public function Stage(width:int, height:int, color:uint=0)
+        public function Stage(starling:Starling, width:int, height:int, color:uint=0)
         {
+			mStarling = starling;
             mWidth = width;
             mHeight = height;
             mColor = color;
@@ -80,13 +83,21 @@ package starling.display
             mCameraPosition = new Vector3D();
             mEnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
             mEnterFrameListeners = new <DisplayObject>[];
+			mBroadcastEnterFrameEvent = true;
         }
         
         /** @inheritDoc */
         public function advanceTime(passedTime:Number):void
         {
             mEnterFrameEvent.reset(Event.ENTER_FRAME, false, passedTime);
-            broadcastEvent(mEnterFrameEvent);
+			if (mBroadcastEnterFrameEvent)
+			{
+				broadcastEvent(mEnterFrameEvent);				
+			}
+			else
+			{
+				dispatchEvent(mEnterFrameEvent);
+			}
         }
 
         /** Returns the object that is found topmost beneath a point in stage coordinates, or  
@@ -268,6 +279,13 @@ package starling.display
          *  to the <code>viewPort</code> property of the Starling object. */
         public function get stageHeight():int { return mHeight; }
         public function set stageHeight(value:int):void { mHeight = value; }
+		
+		/** return current stage Starling*/
+		public function get starling():Starling { return mStarling; }
+		
+		/** disable enter frame broadcast */
+		public function get broadcastEnterFrameEvent():Boolean { return mBroadcastEnterFrameEvent; }
+		public function set broadcastEnterFrameEvent(value:Boolean):void { mBroadcastEnterFrameEvent = value; }
 
         /** The distance between the stage and the camera. Changing this value will update the
          *  field of view accordingly. */

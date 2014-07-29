@@ -43,6 +43,7 @@ package starling.display
         
         private var mVertexDataCache:VertexData;
         private var mVertexDataCacheInvalid:Boolean;
+		private var mVertexDataCacheRaw:Vector.<Number>;
         
         /** Creates a quad with a texture mapped onto it. */
         public function Image(texture:Texture)
@@ -65,6 +66,8 @@ package starling.display
                 mSmoothing = TextureSmoothing.BILINEAR;
                 mVertexDataCache = new VertexData(4, pma);
                 mVertexDataCacheInvalid = true;
+				
+				mVertexDataCacheRaw = mVertexDataCache.rawData;
             }
             else
             {
@@ -183,5 +186,123 @@ package starling.display
         {
             support.batchQuad(this, parentAlpha, mTexture, mSmoothing);
         }
+		
+		public function copyPositionTo(vertexID:int, targetPosition:Point, matrix:Matrix):void
+		{
+			if (mVertexDataCacheInvalid)
+            {
+                mVertexDataCacheInvalid = false;
+                mVertexData.copyTo(mVertexDataCache);
+                mTexture.adjustVertexData(mVertexDataCache, 0, 4);
+            }
+			var offset:int = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.POSITION_OFFSET;
+			var px:Number = mVertexDataCacheRaw[offset];
+			var py:Number = mVertexDataCacheRaw[int(offset + 1)];
+			if (matrix)
+			{
+				px = matrix.a * px + matrix.c * py + matrix.tx;
+				py = matrix.d * py + matrix.b * px + matrix.ty;
+			}
+			targetPosition.x = px;
+			targetPosition.y = py;
+		}
+		
+		public function copyPositionToVector(vertexID:int, targetVector:Vector.<Number>, startIndex:int, matrix:Matrix):void
+		{
+			if (mVertexDataCacheInvalid)
+            {
+                mVertexDataCacheInvalid = false;
+                mVertexData.copyTo(mVertexDataCache);
+                mTexture.adjustVertexData(mVertexDataCache, 0, 4);
+            }
+			var offset:int = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.POSITION_OFFSET;
+			var px:Number = mVertexDataCacheRaw[offset];
+			var py:Number = mVertexDataCacheRaw[int(offset + 1)];
+			if (matrix)
+			{
+				px = matrix.a * px + matrix.c * py + matrix.tx;
+				py = matrix.d * py + matrix.b * px + matrix.ty;
+			}
+			targetVector[startIndex] = px;
+			targetVector[int(startIndex + 1)] = py;
+		}
+		
+		override public function copyVertexDataToVector(vertexID:int, targetVector:Vector.<Number>, startIndex:int, matrix:Matrix, parentAlpha:Number = 1.0):Boolean
+		{
+			var offset:int;
+			var lx:Number;
+			var ly:Number;
+			var px:Number;
+			var py:Number; 
+			
+			if (mVertexDataCacheInvalid)
+            {
+                mVertexDataCacheInvalid = false;
+                mVertexData.copyTo(mVertexDataCache);
+                mTexture.adjustVertexData(mVertexDataCache, 0, 4);
+            }
+			
+			offset = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.POSITION_OFFSET;
+			
+			lx = px = mVertexDataCacheRaw[offset];
+			ly = py = mVertexDataCacheRaw[int(offset + 1)];
+			
+			if (matrix)
+			{
+				lx = matrix.a * px + matrix.c * py + matrix.tx;
+				ly = matrix.d * py + matrix.b * px + matrix.ty;
+			}
+			
+			// coords
+			targetVector[startIndex] = lx;
+			targetVector[int(startIndex + 1)] = ly;
+			
+			//color
+			offset = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.COLOR_OFFSET;
+            var divisor:Number = mPremultipliedAlpha ? mVertexDataCacheRaw[int(offset+3)] : 1.0;
+            
+			var red:Number   = mVertexDataCacheRaw[offset]        	/ divisor;
+			var green:Number = mVertexDataCacheRaw[int(offset + 1)] / divisor;
+			var blue:Number  = mVertexDataCacheRaw[int(offset + 2)] / divisor;
+			var alpha:Number = mVertexDataCacheRaw[int(offset + 3)]	/ divisor;
+			
+			targetVector[int(startIndex + 2)] = red;
+			targetVector[int(startIndex + 3)] = green;
+			targetVector[int(startIndex + 4)] = blue;
+			targetVector[int(startIndex + 5)] = alpha * parentAlpha;
+			
+			// uv (tex coords)
+			offset = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.TEXCOORD_OFFSET;
+			targetVector[int(startIndex + 6)] = mVertexDataCacheRaw[offset];
+			targetVector[int(startIndex + 7)] = mVertexDataCacheRaw[int(offset + 1)];
+			
+			return mTinted || (alpha * parentAlpha != 1.0);
+		}
+		
+		public function copyTexCoordsTo(vertexID:int, targetTexCoords:Point):void
+		{
+			if (mVertexDataCacheInvalid)
+            {
+                mVertexDataCacheInvalid = false;
+                mVertexData.copyTo(mVertexDataCache);
+                mTexture.adjustVertexData(mVertexDataCache, 0, 4);
+            }
+			var offset:int = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.TEXCOORD_OFFSET;
+			targetTexCoords.x = mVertexDataCacheRaw[offset];
+			targetTexCoords.y = mVertexDataCacheRaw[int(offset + 1)];
+		}
+		
+		public function copyTexCoordsToVector(vertexID:int, targetVector:Vector.<Number>, startIndex:int):void
+		{
+			if (mVertexDataCacheInvalid)
+            {
+                mVertexDataCacheInvalid = false;
+                mVertexData.copyTo(mVertexDataCache);
+                mTexture.adjustVertexData(mVertexDataCache, 0, 4);
+            }
+			var offset:int = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.TEXCOORD_OFFSET;
+			targetVector[startIndex] = mVertexDataCacheRaw[offset];
+			targetVector[int(startIndex + 1)] = mVertexDataCacheRaw[int(offset + 1)];
+		}
     }
 }

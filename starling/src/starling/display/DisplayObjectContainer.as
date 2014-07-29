@@ -70,6 +70,7 @@ package starling.display
 
         private var mChildren:Vector.<DisplayObject>;
         private var mTouchGroup:Boolean;
+		private var mBroadcastEvent:Boolean;
         
         /** Helper objects. */
         private static var sHelperMatrix:Matrix = new Matrix();
@@ -89,6 +90,7 @@ package starling.display
             }
             
             mChildren = new <DisplayObject>[];
+			mBroadcastEvent = true;
         }
         
         /** Disposes the resources of all children. */
@@ -280,7 +282,8 @@ package starling.display
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
             if (resultRect == null) resultRect = new Rectangle();
-            
+            var child:DisplayObject;
+			var numBounds:int = 0;
             var numChildren:int = mChildren.length;
             
             if (numChildren == 0)
@@ -291,7 +294,17 @@ package starling.display
             }
             else if (numChildren == 1)
             {
-                mChildren[0].getBounds(targetSpace, resultRect);
+				child = mChildren[0];
+				if (child.includeInParentBounds)
+				{
+					resultRect = child.getBounds(targetSpace, resultRect);
+				}
+				else
+                {
+					getTransformationMatrix(targetSpace, sHelperMatrix);
+					MatrixUtil.transformCoords(sHelperMatrix, 0.0, 0.0, sHelperPoint);
+					resultRect.setTo(sHelperPoint.x, sHelperPoint.y, 0, 0);
+				}
             }
             else
             {
@@ -300,15 +313,28 @@ package starling.display
                 
                 for (var i:int=0; i<numChildren; ++i)
                 {
-                    mChildren[i].getBounds(targetSpace, resultRect);
-
-                    if (minX > resultRect.x)      minX = resultRect.x;
-                    if (maxX < resultRect.right)  maxX = resultRect.right;
-                    if (minY > resultRect.y)      minY = resultRect.y;
-                    if (maxY < resultRect.bottom) maxY = resultRect.bottom;
+					child = mChildren[i];
+					if (child.includeInParentBounds)
+					{
+						child.getBounds(targetSpace, resultRect);
+						minX = minX < resultRect.x ? minX : resultRect.x;
+						maxX = maxX > resultRect.right ? maxX : resultRect.right;
+						minY = minY < resultRect.y ? minY : resultRect.y;
+						maxY = maxY > resultRect.bottom ? maxY : resultRect.bottom;
+						++numBounds;
+					}
                 }
-                
-                resultRect.setTo(minX, minY, maxX - minX, maxY - minY);
+				
+				if (numBounds == 0)
+				{
+					getTransformationMatrix(targetSpace, sHelperMatrix);
+					MatrixUtil.transformCoords(sHelperMatrix, 0.0, 0.0, sHelperPoint);
+					resultRect.setTo(sHelperPoint.x, sHelperPoint.y, 0, 0);
+				}
+                else
+                {
+					resultRect.setTo(minX, minY, maxX - minX, maxY - minY);
+				}
             }
             
             return resultRect;
@@ -348,7 +374,10 @@ package starling.display
             var alpha:Number = parentAlpha * this.alpha;
             var numChildren:int = mChildren.length;
             var blendMode:String = support.blendMode;
-            
+			var saturation:Boolean = support.saturated;
+			
+            if (saturated == false) support.saturated = false;
+			
             for (var i:int=0; i<numChildren; ++i)
             {
                 var child:DisplayObject = mChildren[i];
@@ -364,11 +393,13 @@ package starling.display
 
                     if (mask) support.pushMask(mask);
 
+					if (child.saturated == false) support.saturated = false;
                     if (filter) filter.render(child, support, alpha);
                     else        child.render(support, alpha);
 
                     if (mask) support.popMask();
                     
+					support.saturated = saturation;
                     support.blendMode = blendMode;
                     support.popMatrix();
                 }
@@ -467,6 +498,8 @@ package starling.display
         internal function getChildEventListeners(object:DisplayObject, eventType:String, 
                                                  listeners:Vector.<DisplayObject>):void
         {
+			if (!mBroadcastEvent) return;
+			
             var container:DisplayObjectContainer = object as DisplayObjectContainer;
             
             if (object.hasEventListener(eventType))
@@ -481,5 +514,51 @@ package starling.display
                     getChildEventListeners(children[i], eventType, listeners);
             }
         }
+		
+		/**		 */
+		public function get touchableChildren():Boolean { return !mTouchGroup; }
+		public function set touchableChildren(value:Boolean):void { mTouchGroup = !value; }
+		
+		/**		 */
+		public function get broadcastEvents():Boolean { return mBroadcastEvent; }
+		public function set broadcastEvents(value:Boolean):void { mBroadcastEvent = value; }
+		
+		/** copy list of children
+		 * @return copy */
+		public function getChildren():Vector.<DisplayObject>
+		{
+			return mChildren.slice();
+		}
+		
+		/** Removes all of children from the container, more fast then removeChildren */
+		public function clear(dispose:Boolean = false):void
+		{
+			var hasStage:Boolean = stage != null;
+			var child:DisplayObject;
+			var container:DisplayObjectContainer;
+			var numChildren:int = mChildren.length;
+			for (var i:int = 0; i < numChildren; ++i) 
+			{
+				child = mChildren[i];
+				child.dispatchEventWith(Event.REMOVED);
+				if (hasStage)
+				{
+					container = child as DisplayObjectContainer;
+					if (container)
+						container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
+					else
+						child.dispatchEventWith(Event.REMOVED_FROM_STAGE);
+				}
+				child.setParent(null);
+				if (dispose)
+				{
+					child.dispose();
+				}
+			}
+			mChildren.length = 0;
+		}
+		
+		/** unsafe method, return original children */
+		public function get children():Vector.<DisplayObject> { return mChildren; }
     }
 }

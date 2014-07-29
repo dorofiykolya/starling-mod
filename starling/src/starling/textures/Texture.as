@@ -193,7 +193,7 @@ package starling.textures
             if (asset is Bitmap)
             {
                 texture = Texture.fromBitmap(asset as Bitmap, mipMapping,
-                                             optimizeForRenderToTexture, scale, format, repeat);
+                                             optimizeForRenderToTexture, scale, format, repeat, targetContext, contentScaleFactor, profile);
                 texture.root.onRestore = function():void
                 {
                     texture.root.uploadBitmap(new assetClass());
@@ -234,10 +234,10 @@ package starling.textures
         public static function fromBitmap(bitmap:Bitmap, generateMipMaps:Boolean=true,
                                           optimizeForRenderToTexture:Boolean=false,
                                           scale:Number=1, format:String="bgra",
-                                          repeat:Boolean=false):Texture
+                                          repeat:Boolean=false, targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             return fromBitmapData(bitmap.bitmapData, generateMipMaps, optimizeForRenderToTexture,
-                                  scale, format, repeat);
+                                  scale, format, repeat, targetContext, contentScaleFactor, profile);
         }
 
         /** Creates a texture object from bitmap data.
@@ -258,11 +258,11 @@ package starling.textures
         public static function fromBitmapData(data:BitmapData, generateMipMaps:Boolean=true,
                                               optimizeForRenderToTexture:Boolean=false,
                                               scale:Number=1, format:String="bgra",
-                                              repeat:Boolean=false):Texture
+                                              repeat:Boolean=false, targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             var texture:Texture = Texture.empty(data.width / scale, data.height / scale, true,
                                                 generateMipMaps, optimizeForRenderToTexture, scale,
-                                                format, repeat);
+                                                format, repeat, targetContext, contentScaleFactor, profile);
 
             texture.root.uploadBitmapData(data);
             texture.root.onRestore = function():void
@@ -284,7 +284,7 @@ package starling.textures
         public static function fromAtfData(data:ByteArray, scale:Number=1, useMipMaps:Boolean=true,
                                            async:Function=null, repeat:Boolean=false):Texture
         {
-            var context:Context3D = Starling.context;
+            var context:Context3D = targetContext? targetContext : Starling.context;
             if (context == null) throw new MissingContextError();
 
             var atfData:AtfData = new AtfData(data);
@@ -405,10 +405,10 @@ package starling.textures
          */
         public static function fromColor(width:Number, height:Number, color:uint=0xffffffff,
                                          optimizeForRenderToTexture:Boolean=false,
-                                         scale:Number=-1, format:String="bgra"):Texture
+                                         scale:Number=-1, format:String="bgra", targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             var texture:Texture = Texture.empty(width, height, true, false,
-                                                optimizeForRenderToTexture, scale, format);
+                                                optimizeForRenderToTexture, scale, format, targetContext, contentScaleFactor, profile);
             texture.root.clear(color, Color.getAlpha(color) / 255.0);
             texture.root.onRestore = function():void
             {
@@ -437,13 +437,13 @@ package starling.textures
          */
         public static function empty(width:Number, height:Number, premultipliedAlpha:Boolean=true,
                                      mipMapping:Boolean=true, optimizeForRenderToTexture:Boolean=false,
-                                     scale:Number=-1, format:String="bgra", repeat:Boolean=false):Texture
+                                     scale:Number=-1, format:String="bgra", repeat:Boolean=false, targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             if (scale <= 0) scale = Starling.contentScaleFactor;
 
             var actualWidth:int, actualHeight:int;
             var nativeTexture:TextureBase;
-            var context:Context3D = Starling.context;
+            var context:Context3D = targetContext? targetContext : Starling.context;
 
             if (context == null) throw new MissingContextError();
 

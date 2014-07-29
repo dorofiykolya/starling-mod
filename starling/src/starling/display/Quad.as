@@ -37,10 +37,12 @@ package starling.display
      */
     public class Quad extends DisplayObject
     {
-        private var mTinted:Boolean;
+        protected var mTinted:Boolean;
+		protected var mPremultipliedAlpha:Boolean;
         
         /** The raw vertex data of the quad. */
         protected var mVertexData:VertexData;
+		protected var mVertexDataRaw:Vector.<Number>;
         
         /** Helper objects. */
         private static var sHelperPoint:Point = new Point();
@@ -58,14 +60,14 @@ package starling.display
                 throw new ArgumentError("Invalid size: width and height must not be zero");
 
             mTinted = color != 0xffffff;
-            
+            mPremultipliedAlpha = premultipliedAlpha;
             mVertexData = new VertexData(4, premultipliedAlpha);
             mVertexData.setPosition(0, 0.0, 0.0);
             mVertexData.setPosition(1, width, 0.0);
             mVertexData.setPosition(2, 0.0, height);
             mVertexData.setPosition(3, width, height);
             mVertexData.setUniformColor(color);
-            
+            mVertexDataRaw = mVertexData.rawData;
             onVertexDataChanged();
         }
         
@@ -166,6 +168,51 @@ package starling.display
             if (value < 1.0) mTinted = true;
             else mTinted = mVertexData.tinted;
         }
+		
+		/** Copies the raw vertex data to a Vector.<Number> instance. [coords, colors, uv] */
+		public function copyVertexDataToVector(vertexID:int, targetVector:Vector.<Number>, startIndex:int, matrix:Matrix, parentAlpha:Number = 1.0):Boolean
+		{
+			var offset:int;
+			var lx:Number;
+			var ly:Number;
+			var px:Number;
+			var py:Number; 
+			
+			offset = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.POSITION_OFFSET;
+			
+			lx = px = mVertexDataRaw[offset];
+			ly = py = mVertexDataRaw[int(offset + 1)];
+			
+			if (matrix)
+			{
+				lx = matrix.a * px + matrix.c * py + matrix.tx;
+				ly = matrix.d * py + matrix.b * px + matrix.ty;
+			}
+			
+			// coords
+			targetVector[startIndex] = lx;
+			targetVector[int(startIndex + 1)] = ly;
+			
+			//color
+			offset = vertexID * VertexData.ELEMENTS_PER_VERTEX + VertexData.COLOR_OFFSET;
+            var divisor:Number = mPremultipliedAlpha ? mVertexDataRaw[int(offset+3)] : 1.0;
+            
+			var red:Number   = mVertexDataRaw[offset]        	/ divisor;
+			var green:Number = mVertexDataRaw[int(offset + 1)] 	/ divisor;
+			var blue:Number  = mVertexDataRaw[int(offset + 2)] 	/ divisor;
+			var alpha:Number = mVertexDataRaw[int(offset + 3)]	/ divisor;
+			
+			targetVector[int(startIndex + 2)] = red;
+			targetVector[int(startIndex + 3)] = green;
+			targetVector[int(startIndex + 4)] = blue;
+			targetVector[int(startIndex + 5)] = alpha * parentAlpha;
+			
+			// uv (tex coords)
+			targetVector[int(startIndex + 6)] = 0;
+			targetVector[int(startIndex + 7)] = 0;
+			
+			return mTinted || (alpha * parentAlpha != 1.0);
+		}
         
         /** Copies the raw vertex data to a VertexData instance. */
         public function copyVertexDataTo(targetData:VertexData, targetVertexID:int=0):void
