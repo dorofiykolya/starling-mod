@@ -81,6 +81,8 @@ package starling.display
         private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
         private var mIndexBuffer:IndexBuffer3D;
+		
+		private var mCreateBuffers:Boolean;
         
         /** The raw vertex data of the quad. After modifying its contents, call
          *  'onVertexDataChanged' to upload the changes to the vertex buffers. Don't change the
@@ -94,8 +96,9 @@ package starling.display
 		private static var sNotSaturation:Vector.<Number> = new <Number>[0.299, 0.587, 0.114, 1.0];
         
         /** Creates a new QuadBatch instance with empty batch data. */
-        public function QuadBatch()
+        public function QuadBatch(createBuffers:Boolean = true)
         {
+			mCreateBuffers = createBuffers;
             mVertexData = new VertexData(0, true);
             mIndexData = new <uint>[];
             mNumQuads = 0;
@@ -123,7 +126,7 @@ package starling.display
             super.dispose();
         }
         
-        private function onContextCreated(event:Object):void
+        protected function onContextCreated(event:Object):void
         {
             createBuffers();
         }
@@ -161,8 +164,10 @@ package starling.display
             this.capacity = oldCapacity < 8 ? 16 : oldCapacity * 2;
         }
         
-        private function createBuffers():void
+        protected function createBuffers():void
         {
+			if (!mCreateBuffers) return;
+			
             destroyBuffers();
 
             var numVertices:int = mVertexData.numVertices;
@@ -181,7 +186,7 @@ package starling.display
             mSyncRequired = false;
         }
         
-        private function destroyBuffers():void
+        protected function destroyBuffers():void
         {
             if (mVertexBuffer)
             {
@@ -197,8 +202,10 @@ package starling.display
         }
 
         /** Uploads the raw data of all batched quads to the vertex buffer. */
-        private function syncBuffers():void
+        protected function syncBuffers():void
         {
+			if (!mCreateBuffers) return;
+			
             if (mVertexBuffer == null)
             {
                 createBuffers();
@@ -532,7 +539,7 @@ package starling.display
         {
             if (mNumQuads)
             {
-                if (mBatchable)
+                if (mBatchable || !mCreateBuffers)
                     support.batchQuadBatch(this, parentAlpha);
                 else
                 {
