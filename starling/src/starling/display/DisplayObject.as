@@ -1,10 +1,10 @@
 // =================================================================================================
 //
-//	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//    Starling Framework
+//    Copyright 2011-2014 Gamua. All Rights Reserved.
 //
-//	This program is free software. You can redistribute and/or modify it
-//	in accordance with the terms of the accompanying license agreement.
+//    This program is free software. You can redistribute and/or modify it
+//    in accordance with the terms of the accompanying license agreement.
 //
 // =================================================================================================
 
@@ -157,6 +157,9 @@ package starling.display
 		private var mIncludeInParentBounds:Boolean;
 		private var mSaturated:Boolean;
         
+        private var mIncludeInParentBounds:Boolean;
+        private var mSaturated:Boolean;
+        
         /** Helper objects. */
         private static var sAncestors:Vector.<DisplayObject> = new <DisplayObject>[];
         private static var sHelperPoint:Point = new Point();
@@ -182,8 +185,8 @@ package starling.display
             mBlendMode = BlendMode.AUTO;
             mTransformationMatrix = new Matrix();
             mOrientationChanged = mUseHandCursor = false;
-			mIncludeInParentBounds = true;
-			mSaturated = true;
+            mIncludeInParentBounds = true;
+            mSaturated = true;
         }
         
         /** Disposes all resources of the display object. 
@@ -996,27 +999,27 @@ package starling.display
         /** The stage the display object is connected to, or null if it is not connected 
          *  to the stage. */
         public function get stage():Stage { return this.base as Stage; }
-		
-		/**		 */
-		public function resetTransform():void
-		{
-			mX = mY = mPivotX = mPivotY = mRotation = mSkewX = mSkewY = 0.0;
+        
+        /**         */
+        public function resetTransform():void
+        {
+            mX = mY = mPivotX = mPivotY = mRotation = mSkewX = mSkewY = 0.0;
             mScaleX = mScaleY = mAlpha = 1.0;            
             mVisible = mTouchable = true;
             mBlendMode = BlendMode.AUTO;
             mTransformationMatrix.identity();
             mUseHandCursor = false;
-			mOrientationChanged = true;
-			mIncludeInParentBounds = true;
-			mSaturated = true;
-		}
-		
-		/** include in parent bounds */
-		public function get includeInParentBounds():Boolean { return mIncludeInParentBounds; }
-		public function set includeInParentBounds(value:Boolean):void { mIncludeInParentBounds = value; }
-		
-		/** is object saturated */
-		public function get saturated():Boolean { return mSaturated; }
-		public function set saturated(value:Boolean):void { mSaturated = value; };
+            mOrientationChanged = true;
+            mIncludeInParentBounds = true;
+            mSaturated = true;
+        }
+        
+        /** include in parent bounds */
+        public function get includeInParentBounds():Boolean { return mIncludeInParentBounds; }
+        public function set includeInParentBounds(value:Boolean):void { mIncludeInParentBounds = value; }
+        
+        /** is object saturated */
+        public function get saturated():Boolean { return mSaturated; }
+        public function set saturated(value:Boolean):void { mSaturated = value; };
     }
 }
