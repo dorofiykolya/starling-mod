@@ -269,7 +269,7 @@ package starling.display
                             _textures[i] = texture;
                             _hasTexture = true;
                         }
-                        if (_textures[i] == texture)
+                        if (_textures[i].base == texture.base)
                         {
                             _textureMask[i] = 1;
                             index = i;
