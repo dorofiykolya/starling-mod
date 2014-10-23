@@ -108,13 +108,13 @@ package starling.display
         {
             if (numChildren != 0 && hasVisibleArea)
             {
-                prepareToRender();
+                clearRenderData();
                 batchContainer(this, support, parentAlpha * alpha);
                 renderCustom(support);
             }
         }
         
-        private function prepareToRender():void
+        private function clearRenderData():void
         {
             _vertexId = 0;
             _indexId = 0;
@@ -220,6 +220,7 @@ package starling.display
             {
                 context.setVertexBufferAt(3, null); // color
             }
+            clearRenderData();
         }
         
         private function batchContainer(target:DisplayObjectContainer, support:RenderSupport, parentAlpha:Number):void
