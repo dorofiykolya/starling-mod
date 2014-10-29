@@ -1021,5 +1021,12 @@ package starling.display
         /** is object saturated */
         public function get saturated():Boolean { return mSaturated; }
         public function set saturated(value:Boolean):void { mSaturated = value; };
+        
+        /** Removes the object from its parent, if it has one, and optionally disposes it. */
+        public function cutFromParent(dispose:Boolean=false):void
+        {
+            if (mParent) mParent.cut(this, dispose);
+            else if (dispose) this.dispose();
+        }
     }
 }

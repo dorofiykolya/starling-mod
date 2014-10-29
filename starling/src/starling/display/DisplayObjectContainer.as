@@ -523,10 +523,7 @@ package starling.display
         
         /** copy list of children
          * @return copy */
-        public function getChildren():Vector.<DisplayObject>
-        {
-            return mChildren.slice();
-        }
+        public function getChildren():Vector.<DisplayObject> { return mChildren.slice(); }
         
         /** Removes all of children from the container, more fast then removeChildren */
         public function clear(dispose:Boolean = false):void
@@ -558,5 +555,86 @@ package starling.display
         
         /** unsafe method, return original children */
         public function get children():Vector.<DisplayObject> { return mChildren; }
+        
+        public function insert(child:DisplayObject, index:int = int.MAX_VALUE):DisplayObject
+        {
+            var numChildren:int = mChildren.length; 
+            index = index > numChildren? numChildren : index;
+            if (index >= 0 && index <= numChildren)
+            {
+                if (child.parent == this)
+                {
+                    setChildIndex(child, index); // avoids dispatching events
+                }
+                else
+                {
+                    child.cutFromParent();
+                    
+                    // 'splice' creates a temporary object, so we avoid it if it's not necessary
+                    if (index == numChildren) mChildren[numChildren] = child;
+                    else                      mChildren.splice(index, 0, child);
+                    
+                    child.setParent(this);
+                }
+                
+                return child;
+            }
+            else
+            {
+                throw new RangeError("Invalid child index");
+            }
+        }
+        
+        public function cut(child:DisplayObject, dispose:Boolean=false):DisplayObject
+        {
+            var childIndex:int = getChildIndex(child);
+            if (childIndex != -1) cutdAt(childIndex, dispose);
+            return child;
+        }
+        
+        public function cutdAt(index:int, dispose:Boolean=false):DisplayObject
+        {
+            if (index >= 0 && index < numChildren)
+            {
+                var child:DisplayObject = mChildren[index];
+                child.setParent(null);
+                mChildren.splice(index, 1); 
+                if (dispose) child.dispose();
+                
+                return child;
+            }
+            else
+            {
+                throw new RangeError("Invalid child index");
+            }
+        }
+        
+        /** Removes a range of children from the container (endIndex included). 
+         *  If no arguments are given, all children will be removed. */
+        public function cutChildren(beginIndex:int=0, endIndex:int=-1, dispose:Boolean=false):void
+        {
+            if (endIndex < 0 || endIndex >= numChildren) 
+                endIndex = numChildren - 1;
+            
+            for (var i:int=beginIndex; i<=endIndex; ++i)
+                cutdAt(beginIndex, dispose);
+        }
+        
+        public function cutAll(dispose:Boolean = false):void
+        {
+            var child:DisplayObject;
+            var container:DisplayObjectContainer;
+            var numChildren:int = mChildren.length;
+            for (var i:int = 0; i < numChildren; ++i) 
+            {
+                child = mChildren[i];
+                child.setParent(null);
+                if (dispose)
+                {
+                    child.dispose();
+                }
+            }
+            mChildren.length = 0;
+        }
     }
 }
