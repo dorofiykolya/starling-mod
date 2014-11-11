@@ -574,7 +574,7 @@ package starling.display
                 for (var j:int=i+1; j<quadBatches.length; )
                 {
                     batch2 = quadBatches[j];
-                    if (!batch1.isStateChange(batch2.tinted, 1.0, batch2.texture,
+                    if (!batch1.isStateChange(batch2.saturated, batch2.tinted, 1.0, batch2.texture,
                                               batch2.smoothing, batch2.blendMode))
                     {
                         batch1.addQuadBatch(batch2);

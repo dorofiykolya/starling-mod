@@ -157,9 +157,6 @@ package starling.display
 		private var mIncludeInParentBounds:Boolean;
 		private var mSaturated:Boolean;
         
-        private var mIncludeInParentBounds:Boolean;
-        private var mSaturated:Boolean;
-        
         /** Helper objects. */
         private static var sAncestors:Vector.<DisplayObject> = new <DisplayObject>[];
         private static var sHelperPoint:Point = new Point();

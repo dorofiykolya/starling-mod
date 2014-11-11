@@ -397,11 +397,11 @@ package starling.display
 
                     if (mask) support.popMask();
                     
-                    support.saturated = saturation;
                     support.blendMode = blendMode;
                     support.popMatrix();
                 }
             }
+            support.saturated = saturation;
         }
         
         /** Dispatches an event on all children (recursively). The event must not bubble. */
