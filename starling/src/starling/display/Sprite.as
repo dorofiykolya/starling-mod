@@ -107,11 +107,14 @@ package starling.display
          *  @param ignoreChildOrder If the child order is not important, you can further optimize
          *           the number of draw calls. Naturally, this is not an option for all use-cases.
          */
-        public function flatten(ignoreChildOrder:Boolean=false):void
+        public function flatten(ignoreChildOrder:Boolean=false, dispatchEvent:Boolean = true):void
         {
             mFlattenRequested = true;
             mFlattenOptimized = ignoreChildOrder;
-            broadcastEventWith(Event.FLATTEN);
+            if (dispatchEvent)
+            {
+                broadcastEventWith(Event.FLATTEN);
+            }
         }
         
         /** Removes the rendering optimizations that were created when flattening the sprite.

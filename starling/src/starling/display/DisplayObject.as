@@ -1022,8 +1022,15 @@ package starling.display
         /** Removes the object from its parent, if it has one, and optionally disposes it. */
         public function cutFromParent(dispose:Boolean=false):void
         {
-            if (mParent) mParent.cut(this, dispose);
-            else if (dispose) this.dispose();
+            if (mParent) 
+            {
+                mParent.cut(this, dispose);
+                mParent = null;
+            }
+            if (dispose) 
+            {
+                this.dispose();
+            }
         }
     }
 }
