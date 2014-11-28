@@ -375,8 +375,9 @@ package starling.display
             var numChildren:int = mChildren.length;
             var blendMode:String = support.blendMode;
             var saturation:Boolean = support.saturated;
+            var thisSaturated:Boolean = saturated;
             
-            if (saturated == false) support.saturated = false;
+            if (thisSaturated == false) support.saturated = false;
             
             for (var i:int=0; i<numChildren; ++i)
             {
@@ -396,6 +397,8 @@ package starling.display
                     else        child.render(support, alpha);
 
                     if (mask) support.popMask();
+                    
+                    support.saturated = thisSaturated && saturation;
                     
                     support.blendMode = blendMode;
                     support.popMatrix();
