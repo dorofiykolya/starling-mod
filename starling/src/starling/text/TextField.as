@@ -120,6 +120,8 @@ package starling.text
         private var mImage:Image;
         private var mQuadBatch:QuadBatch;
         
+        private var mLetterSpacing:Number;
+        
         /** Helper objects. */
         private static var sHelperMatrix:Matrix = new Matrix();
         private static var sNativeTextField:flash.text.TextField = new flash.text.TextField();
@@ -138,6 +140,7 @@ package starling.text
             mBold = bold;
             mAutoSize = TextFieldAutoSize.NONE;
             mHitArea = new Rectangle(0, 0, width, height);
+            mLetterSpacing = 0.0;
             this.fontName = fontName;
             
             addEventListener(Event.FLATTEN, onFlatten);
@@ -451,7 +454,7 @@ package starling.text
             }
             
             bitmapFont.fillQuadBatch(mQuadBatch,
-                width, height, mText, mFontSize, mColor, hAlign, vAlign, mAutoScale, mKerning);
+                width, height, mText, mFontSize, mColor, hAlign, vAlign, mAutoScale, mKerning, mLetterSpacing);
             
             mQuadBatch.batchable = mBatchable;
             
@@ -561,6 +564,20 @@ package starling.text
                 mRequiresRedraw = true;
             }
         }
+        
+        public function get letterSpacing():Number { return mLetterSpacing; }
+        public function set letterSpacing(value:Number):void
+		{
+			if (mLetterSpacing != value)
+			{
+				if (value != value)
+				{
+					value = 0;
+				}
+				mLetterSpacing = value;
+				mRequiresRedraw = true;
+			}
+		}
         
         /** The name of the font (true type or bitmap font). */
         public function get fontName():String { return mFontName; }
@@ -775,15 +792,13 @@ package starling.text
         public static function registerBitmapFont(bitmapFont:BitmapFont, name:String=null):String
         {
             if (name == null) name = bitmapFont.name;
-            bitmapFonts[name.toLowerCase()] = bitmapFont;
+            bitmapFonts[name] = bitmapFont;
             return name;
         }
         
         /** Unregisters the bitmap font and, optionally, disposes it. */
         public static function unregisterBitmapFont(name:String, dispose:Boolean=true):void
         {
-            name = name.toLowerCase();
-            
             if (dispose && bitmapFonts[name] != undefined)
                 bitmapFonts[name].dispose();
             
@@ -794,7 +809,7 @@ package starling.text
          *  The name is not case sensitive. */
         public static function getBitmapFont(name:String):BitmapFont
         {
-            return bitmapFonts[name.toLowerCase()];
+            return bitmapFonts[name];
         }
         
         /** Stores the currently available bitmap fonts. Since a bitmap font will only work

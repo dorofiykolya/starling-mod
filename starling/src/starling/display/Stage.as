@@ -15,6 +15,7 @@ package starling.display
     import flash.geom.Matrix3D;
     import flash.geom.Point;
     import flash.geom.Vector3D;
+    import flash.utils.getTimer;
     
     import starling.core.RenderSupport;
     import starling.core.Starling;
@@ -67,6 +68,9 @@ package starling.display
         private var mEnterFrameListeners:Vector.<DisplayObject>;
         private var mStarling:Starling;
         private var mBroadcastEnterFrameEvent:Boolean;
+        private var mFps:Number;
+        private var mFrame:int;
+        private var mFpsLastTime:Number;
         
         /** Helper objects. */
         private static var sHelperMatrix:Matrix3D = new Matrix3D();
@@ -84,11 +88,25 @@ package starling.display
             mEnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
             mEnterFrameListeners = new <DisplayObject>[];
             mBroadcastEnterFrameEvent = true;
+            mFpsLastTime = getTimer() / 1000;
         }
         
         /** @inheritDoc */
         public function advanceTime(passedTime:Number):void
         {
+            var now:Number = getTimer() / 1000.0;
+			mFrame++;
+			var delta:Number = now - mFpsLastTime;
+			if (delta > 1)
+			{
+				mFps = mFrame / delta;
+				mFps *= 10.0;
+				mFps |= 0;
+				mFps /= 10.0;
+				mFrame = 0;
+				mFpsLastTime = now;
+			}
+            
             mEnterFrameEvent.reset(Event.ENTER_FRAME, false, passedTime);
             if (mBroadcastEnterFrameEvent)
             {
@@ -174,6 +192,11 @@ package starling.display
             return MatrixUtil.transformCoords3D(sHelperMatrix,
                 mWidth / 2 + mProjectionOffset.x, mHeight / 2 + mProjectionOffset.y,
                -focalLength, result);
+        }
+        
+        public function get fps():Number
+        {
+            return mFps;
         }
 
         // enter frame event optimization

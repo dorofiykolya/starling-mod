@@ -43,6 +43,7 @@ package starling.display
         /** The raw vertex data of the quad. */
         protected var mVertexData:VertexData;
 		protected var mVertexDataRaw:Vector.<Number>;
+        protected var mColorTransform:ColorTransform;
         
         /** Helper objects. */
         private static var sHelperPoint:Point = new Point();
@@ -68,8 +69,30 @@ package starling.display
             mVertexData.setPosition(3, width, height);
             mVertexData.setUniformColor(color);
             mVertexDataRaw = mVertexData.rawData;
+            mColorTransform = new ColorTransform();
             onVertexDataChanged();
         }
+        
+        public function set colorTransform(value:ColorTransform):void
+		{
+			if (mColorTransform != value)
+			{
+				mColorTransform.copyFrom(value);
+			}
+			for (var i:int = 0; i < 4; i++) 
+			{
+				mVertexData.setRawColorAndAlpha(i, 
+												mColorTransform.red * mColorTransform.redMultiplier / 255.0,
+												mColorTransform.green * mColorTransform.greenMultiplier / 255.0,
+												mColorTransform.blue * mColorTransform.blueMultiplier / 255.0,
+												mColorTransform.alpha * mColorTransform.alphaMultiplier / 255.0);
+			}
+			if (mColorTransform.color != 0xffffff || alpha != 1.0) mTinted = true;
+            else mTinted = mVertexData.tinted;
+			onVertexDataChanged();
+		}
+		
+		public function get colorTransform():ColorTransform { return mColorTransform; }
         
         /** Call this method after manually changing the contents of 'mVertexData'. */
         protected function onVertexDataChanged():void
@@ -153,8 +176,11 @@ package starling.display
         /** Sets the colors of all vertices to a certain value. */
         public function set color(value:uint):void 
         {
-            mVertexData.setUniformColor(value);
-            onVertexDataChanged();
+            mColorTransform.reset();
+			mColorTransform.rgb = value;
+			colorTransform = mColorTransform;
+            //mVertexData.setUniformColor(value);
+            //onVertexDataChanged();
             
             if (value != 0xffffff || alpha != 1.0) mTinted = true;
             else mTinted = mVertexData.tinted;

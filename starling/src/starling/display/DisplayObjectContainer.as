@@ -559,7 +559,12 @@ package starling.display
         /** unsafe method, return original children */
         public function get children():Vector.<DisplayObject> { return mChildren; }
         
-        public function insert(child:DisplayObject, index:int = int.MAX_VALUE):DisplayObject
+        public function insert(child:DisplayObject):DisplayObject
+        {
+            return insertAt(child, mChildren.length);
+        }
+        
+        public function insertAt(child:DisplayObject, index:int):DisplayObject
         {
             var numChildren:int = mChildren.length; 
             index = index > numChildren? numChildren : index;
@@ -591,11 +596,11 @@ package starling.display
         public function cut(child:DisplayObject, dispose:Boolean=false):DisplayObject
         {
             var childIndex:int = getChildIndex(child);
-            if (childIndex != -1) cutdAt(childIndex, dispose);
+            if (childIndex != -1) cutAt(childIndex, dispose);
             return child;
         }
         
-        public function cutdAt(index:int, dispose:Boolean=false):DisplayObject
+        public function cutAt(index:int, dispose:Boolean=false):DisplayObject
         {
             if (index >= 0 && index < numChildren)
             {
@@ -620,7 +625,7 @@ package starling.display
                 endIndex = numChildren - 1;
             
             for (var i:int=beginIndex; i<=endIndex; ++i)
-                cutdAt(beginIndex, dispose);
+                cutAt(beginIndex, dispose);
         }
         
         public function cutAll(dispose:Boolean = false):void

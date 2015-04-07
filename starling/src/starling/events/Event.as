@@ -122,7 +122,7 @@ package starling.events
         /** Returns a description of the event, containing type and bubble information. */
         public function toString():String
         {
-            return formatString("[{0} type=\"{1}\" bubbles={2}]", 
+            return starling.utils.formatString("[{0} type=\"{1}\" bubbles={2}]", 
                 getQualifiedClassName(this).split("::").pop(), mType, mBubbles);
         }
         

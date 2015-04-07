@@ -185,7 +185,7 @@ package starling.textures
         public static function fromEmbeddedAsset(assetClass:Class, mipMapping:Boolean=true,
                                                  optimizeForRenderToTexture:Boolean=false,
                                                  scale:Number=1, format:String="bgra",
-                                                 repeat:Boolean=false):Texture
+                                                 repeat:Boolean=false, targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             var texture:Texture;
             var asset:Object = new assetClass();
@@ -282,7 +282,7 @@ package starling.textures
          *  asynchronously. It can only be used when the callback has been executed. This is the
          *  expected function definition: <code>function(texture:Texture):void;</code></p> */
         public static function fromAtfData(data:ByteArray, scale:Number=1, useMipMaps:Boolean=true,
-                                           async:Function=null, repeat:Boolean=false):Texture
+                                           async:Function=null, repeat:Boolean=false, targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             var context:Context3D = targetContext? targetContext : Starling.context;
             if (context == null) throw new MissingContextError();
@@ -408,7 +408,7 @@ package starling.textures
                                          scale:Number=-1, format:String="bgra", targetContext:Context3D = null, contentScaleFactor:Number = NaN, profile:String = null):Texture
         {
             var texture:Texture = Texture.empty(width, height, true, false,
-                                                optimizeForRenderToTexture, scale, format, targetContext, contentScaleFactor, profile);
+                                                optimizeForRenderToTexture, scale, format, false, targetContext, contentScaleFactor, profile);
             texture.root.clear(color, Color.getAlpha(color) / 255.0);
             texture.root.onRestore = function():void
             {

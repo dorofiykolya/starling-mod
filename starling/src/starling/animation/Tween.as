@@ -339,6 +339,12 @@ package starling.animation
             else return mEndValues[index] as Number;
         }
         
+        public function scaleToXY(x:Number, y:Number):void 
+        {
+            animate("scaleX", x);
+            animate("scaleY", y);
+        }
+        
         /** Indicates if the tween is finished. */
         public function get isComplete():Boolean 
         { 

@@ -215,6 +215,8 @@ package starling.core
         private var mNativeStage:flash.display.Stage;
         private var mNativeOverlay:flash.display.Sprite;
         private var mNativeStageContentScaleFactor:Number;
+        private var mIsRender:Boolean;
+        private var mIsDebugger:Boolean;
 
         private static var sCurrent:Starling;
         private static var sHandleLostContext:Boolean = true;
@@ -276,7 +278,8 @@ package starling.core
             mSupportHighResolutions = false;
             mLastFrameTimestamp = getTimer() / 1000.0;
             mSupport  = new RenderSupport();
-            
+            mIsRender = true;
+            mIsDebugger = Capabilities.isDebugger;
             // for context data, we actually reference by stage3D, since it survives a context loss
             sContextData[stage3D] = new Dictionary();
             sContextData[stage3D][PROGRAM_DATA_NAME] = new Dictionary();
@@ -492,7 +495,7 @@ package starling.core
          *  it is presented. This can be avoided by enabling <code>shareContext</code>.*/ 
         public function render():void
         {
-            if (!contextValid)
+            if (!contextValid || !mIsRender)
                 return;
             
             makeCurrent();
@@ -685,13 +688,31 @@ package starling.core
             // On mobile, the native display list is only updated on stage3D draw calls.
             // Thus, we render even when Starling is paused.
             
-            if (!mShareContext)
+            if (!mIsDebugger)
             {
-                if (mStarted) nextFrame();
-                else if (mRendering) render();
+                try
+                {
+                    if (!mShareContext)
+                    {
+                        if (mStarted) nextFrame();
+                        else if (mRendering) render();
+                    }
+                    updateNativeOverlay();
+                }
+                catch (e:Error)
+                {
+                    dispatchEvent(new starling.events.Event(starling.events.Event.FATAL_ERROR, false, e));
+                }
             }
-
-            updateNativeOverlay();
+            else
+            {
+                if (!mShareContext)
+                {
+                    if (mStarted) nextFrame();
+                    else if (mRendering) render();
+                }
+                updateNativeOverlay();
+            }
         }
         
         private function onKey(event:KeyboardEvent):void
@@ -873,6 +894,10 @@ package starling.core
         private function get programs():Dictionary { return contextData[PROGRAM_DATA_NAME]; }
         
         // properties
+        
+        public function get isRender():Boolean { return mIsRender; }
+		
+		public function set isRender(value:Boolean):void { mIsRender = value; }
         
         /** Indicates if this Starling instance is started. */
         public function get isStarted():Boolean { return mStarted; }
