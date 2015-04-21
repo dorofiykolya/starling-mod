@@ -58,14 +58,14 @@ package starling.core
         
         private function onAddedToStage():void
         {
-            addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
             mTotalTime = mFrameCount = 0;
             update();
         }
         
         private function onRemovedFromStage():void
         {
-            removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            stage.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
         }
         
         private function onEnterFrame(event:EnterFrameEvent):void
