@@ -790,14 +790,15 @@ package starling.text
         public static function registerBitmapFont(bitmapFont:BitmapFont, name:String=null):String
         {
             if (name == null) name = bitmapFont.name;
-            bitmapFonts[convertToLowerCase(name)] = bitmapFont;
+            //bitmapFonts[convertToLowerCase(name)] = bitmapFont;
+            bitmapFonts[name] = bitmapFont;
             return name;
         }
         
         /** Unregisters the bitmap font and, optionally, disposes it. */
         public static function unregisterBitmapFont(name:String, dispose:Boolean=true):void
         {
-            name = convertToLowerCase(name);
+            //name = convertToLowerCase(name);
             
             if (dispose && bitmapFonts[name] != undefined)
                 bitmapFonts[name].dispose();
@@ -809,7 +810,8 @@ package starling.text
          *  The name is not case sensitive. */
         public static function getBitmapFont(name:String):BitmapFont
         {
-            return bitmapFonts[convertToLowerCase(name)];
+            //return bitmapFonts[convertToLowerCase(name)];
+            return bitmapFonts[name];
         }
         
         /** Stores the currently available bitmap fonts. Since a bitmap font will only work
