@@ -1,3 +1,13 @@
+// =================================================================================================
+//
+//	Starling Framework
+//	Copyright 2011-2015 Gamua. All Rights Reserved.
+//
+//	This program is free software. You can redistribute and/or modify it
+//	in accordance with the terms of the accompanying license agreement.
+//
+// =================================================================================================
+
 package starling.utils
 {
     import flash.display.Bitmap;
@@ -635,7 +645,7 @@ package starling.utils
                     if (assetCount > 0) loadNextQueueElement();
                     else                processXmls();
                 };
-                
+
                 processRawAsset(assetInfo.name, assetInfo.asset, assetInfo.options,
                     xmls, onElementProgress, onElementLoaded);
             }
@@ -826,7 +836,12 @@ package starling.utils
                     
                     if (AtfData.isAtfData(bytes))
                     {
-                        options.onReady = prependCallback(options.onReady, onComplete);
+                        options.onReady = prependCallback(options.onReady, function():void
+                        {
+                            addTexture(name, texture);
+                            onComplete();
+                        });
+
                         texture = Texture.fromData(bytes, options);
                         texture.root.onRestore = function():void
                         {
@@ -845,7 +860,6 @@ package starling.utils
                         };
                         
                         bytes.clear();
-                        addTexture(name, texture);
                     }
                     else if (byteArrayStartsWith(bytes, "{") || byteArrayStartsWith(bytes, "["))
                     {

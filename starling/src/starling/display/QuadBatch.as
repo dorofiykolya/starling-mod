@@ -73,6 +73,7 @@ package starling.display
         private var mNumQuads:int;
         private var mSyncRequired:Boolean;
         private var mBatchable:Boolean;
+        private var mForceTinted:Boolean;
 
         private var mTinted:Boolean;
         private var mTexture:Texture;
@@ -105,7 +106,8 @@ package starling.display
             mTinted = false;
             mSyncRequired = false;
             mBatchable = false;
-            
+            mForceTinted = false;
+
             // Handle lost context. We use the conventional event here (not the one from Starling)
             // so we're able to create a weak event listener; this avoids memory leaks when people 
             // forget to call "dispose" on the QuadBatch.
@@ -307,7 +309,7 @@ package starling.display
                 this.blendMode = blendMode ? blendMode : quad.blendMode;
 				this.saturated = quad.saturated && saturated;
                 mTexture = texture;
-                mTinted = texture ? (quad.tinted || parentAlpha != 1.0) : false;
+                mTinted = mForceTinted || quad.tinted || parentAlpha != 1.0;
                 mSmoothing = smoothing;
                 mVertexData.setPremultipliedAlpha(quad.premultipliedAlpha);
             }
@@ -329,7 +331,6 @@ package starling.display
             if (modelViewMatrix == null)
                 modelViewMatrix = quadBatch.transformationMatrix;
             
-            var tinted:Boolean = quadBatch.mTinted || parentAlpha != 1.0;
             var alpha:Number = parentAlpha * quadBatch.alpha;
             var vertexID:int = mNumQuads * 4;
             var numQuads:int = quadBatch.numQuads;
@@ -340,7 +341,7 @@ package starling.display
                 this.blendMode = blendMode ? blendMode : quadBatch.blendMode;
 				this.saturated = quadBatch.saturated && saturated;
                 mTexture = quadBatch.mTexture;
-                mTinted = tinted;
+                mTinted = mForceTinted || quadBatch.mTinted || parentAlpha != 1.0;
                 mSmoothing = quadBatch.mSmoothing;
                 mVertexData.setPremultipliedAlpha(quadBatch.mVertexData.premultipliedAlpha, false);
             }
@@ -370,7 +371,7 @@ package starling.display
         /** Indicates if specific quads can be added to the batch without causing a state change. 
          *  A state change occurs if the quad uses a different base texture, has a different 
          *  'tinted', 'smoothing', 'repeat' or 'blendMode' setting, or if the batch is full
-         *  (one batch can contain up to 8192 quads). */
+         *  (one batch can contain up to 16383 quads). */
         public function isStateChange(saturated:Boolean, tinted:Boolean, parentAlpha:Number, texture:Texture, 
                                       smoothing:String, blendMode:String, numQuads:int=1):Boolean
         {
@@ -382,7 +383,7 @@ package starling.display
                 return mTexture.base != texture.base ||
                        mTexture.repeat != texture.repeat ||
                        mSmoothing != smoothing ||
-                       mTinted != (tinted || parentAlpha != 1.0) ||
+                       mTinted != (mForceTinted || tinted || parentAlpha != 1.0) ||
 					   this.saturated != saturated ||
                        this.blendMode != blendMode;
             else return true;
@@ -725,7 +726,7 @@ package starling.display
         public function get numQuads():int { return mNumQuads; }
         
         /** Indicates if any vertices have a non-white color or are not fully opaque. */
-        public function get tinted():Boolean { return mTinted; }
+        public function get tinted():Boolean { return mTinted || mForceTinted; }
         
         /** The texture that is used for rendering, or null for pure quads. Note that this is the
          *  texture instance of the first added quad; subsequently added quads may use a different
@@ -743,8 +744,21 @@ package starling.display
          *  the CPU costs will exceed any gains you get from avoiding the additional draw call.
          *  @default false */
         public function get batchable():Boolean { return mBatchable; }
-        public function set batchable(value:Boolean):void { mBatchable = value; } 
-        
+        public function set batchable(value:Boolean):void { mBatchable = value; }
+
+        /** If enabled, the QuadBatch will always be rendered with a tinting-enabled fragment
+         *  shader and the method 'isStateChange' won't take tinting into account. This means
+         *  fewer state changes, but also a slightly more complex fragment shader for non-tinted
+         *  quads. On modern hardware, that's not a problem, and you'll avoid unnecessary state
+         *  changes. However, on old devices like the iPad 1, you should be careful with this
+         *  setting. @default false
+         */
+        public function get forceTinted():Boolean { return mForceTinted; }
+        public function set forceTinted(value:Boolean):void
+        {
+            mForceTinted = value;
+        }
+
         /** Indicates the number of quads for which space is allocated (vertex- and index-buffers).
          *  If you add more quads than what fits into the current capacity, the QuadBatch is
          *  expanded automatically. However, if you know beforehand how many vertices you need,
