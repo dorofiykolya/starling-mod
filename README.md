@@ -24,3 +24,8 @@ Here are a few starting points:
   * [Extensions](http://wiki.starling-framework.org/extensions/start)
 
 [1]: http://www.sparrow-framework.org
+
+Changes:
+ DisplayObject property: saturation (true|false)
+ Image property: colorTransform ColorTransform
+ DisplayObject method: resetTransform
