@@ -26,6 +26,6 @@ Here are a few starting points:
 [1]: http://www.sparrow-framework.org
 
 Changes:
- DisplayObject property: saturation (true|false)
- Image property: colorTransform ColorTransform
- DisplayObject method: resetTransform
+  * DisplayObject property: saturation (true|false)
+  * Image property: colorTransform ColorTransform
+  * DisplayObject method: resetTransform
