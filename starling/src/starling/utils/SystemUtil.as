@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -15,7 +15,7 @@ package starling.utils
     import flash.events.EventDispatcher;
     import flash.system.Capabilities;
     import flash.utils.getDefinitionByName;
-    
+
     import starling.errors.AbstractClassError;
 
     /** A utility class with methods related to the current platform and runtime. */
@@ -68,8 +68,14 @@ package starling.utils
             sApplicationActive = true;
             
             for each (var call:Array in sWaitingCalls)
-                call[0].apply(null, call[1]);
-            
+            {
+                try { call[0].apply(null, call[1]); }
+                catch (e:Error)
+                {
+                    trace("[Starling] Error in 'executeWhenApplicationIsActive' call:", e.message);
+                }
+            }
+
             sWaitingCalls = [];
         }
         
@@ -129,14 +135,6 @@ package starling.utils
         {
             initialize();
             return sVersion;
-        }
-
-        /** Prior to Flash/AIR 15, there was a restriction that the clear function must be
-         *  called on a render target before drawing. This requirement was removed subsequently,
-         *  and this property indicates if that's the case in the current runtime. */
-        public static function get supportsRelaxedTargetClearRequirement():Boolean
-        {
-            return parseInt(/\d+/.exec(sVersion)[0]) >= 15;
         }
 
         /** Returns the value of the 'initialWindow.depthAndStencil' node of the application

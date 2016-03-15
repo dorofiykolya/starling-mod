@@ -1,6 +1,163 @@
 Starling: Changelog
 ===================
 
+version 2.0 (beta) - 2016-02-29
+-------------------------------
+
+- added render cache: auto-detects if display tree changes, speeds up rendering of unchanged regions
+- added 'Mesh' class, the new base class of all non-container display objects
+- added 'MeshBatch' class, a more flexible replacement of the old 'QuadBatch'
+- added 'MeshStyle' class, allowing customized rendering of any meshes
+- added 'Painter' class that replaces 'RenderSupport' and contains a stack of 'RenderStates'
+- added 'Effect', 'FilterEffect' & 'MeshEffect', encapsulating low-level stage3D rendering
+- added a completely rewritten 'FragmentFilter' API
+- added 'FilterChain' class, allowing to combine several filters into one
+- added 'DropShadowFilter' and 'GlowFilter'
+- added 'RenderState' class, capturing context and other render settings
+- added 'Program' class, a comfortable wrapper of stage3D programs that survives a context loss
+- added 'VertexDataFormat' and using it in 'VertexData' for flexible vertex data structures
+- added 'IndexData' class, the new partner of 'VertexData'
+- added 'BatchProcessor' class, the master puppeteer of all batch rendering
+- added 'TextFormat' class and using it in TextField and BitmapFont
+- added 'TextOptions', 'ITextCompositor', and 'TrueTypeCompositor' for more flexible Text composition
+- added 'scale9Grid' property to 'Image' and 'Button'
+- added 'tileGrid' property to 'Image'
+- added 'scale' property to DisplayObject, for simple uniform scaling
+- added 'StringUtil' with methods like 'trim' and 'format'
+- added 'Pool' class for simple pooling of basic classes (Point, Vector3D, Rectangle, Matrix)
+- added 'getTextureAtlasNames' method to AssetManager
+- added 'MatrixUtil.isIdentity'
+- added 'pixelSnapping' property to Mesh class (enabled by default)
+- added 'wordWrap' property to TextField class
+- added frame actions to MovieClip, completely rewrote 'advanceTime'
+- added new 'rendering' package and moving some classes over
+- added new Benchmark in Demo
+- added try/catch around 'executeWhenApplicationIsActive' callbacks
+- added second argument to 'EventDispatcher.hasEventListener' to allow checking for a specific listener
+- added 'Event.UPDATE' as a new generic event type
+- added 'Color.multiply'
+- added 'toString' methods to 'MatrixUtil'
+- added missing brackets to 'Touch.toString'
+- added new DelayedCall-related methods to Juggler
+- added 'Button.textureSmoothing' property
+- added optional 'width' and 'height' arguments to 'Quad.readjustSize'
+- added 'RectangleUtil.extend'
+- added 'MathUtil.min', 'MathUtil.max', 'MathUtil.clamp', 'MathUtil.isEquivalent'
+- added 'Stage.getStageBounds'
+- added 'Mesh.defaultStyle' property, allowing to specify the default style for all meshes
+- updated VertexData class to use a ByteArray instead of a Vector
+- updated TextFields to always use the minimal possible texture size for TrueType fonts
+- updated the Juggler's 'add' methods to return a unique ID that can be used to remove the same object
+- updated requirements: now depending on at least AIR / FP 19
+- updated transporter chief for compatibility with latest ios-deploy
+- replaced all 'splice' calls with new 'insertAt' and 'removeAt' methods
+- replaced 'HAlign' and 'VAlign' with one single 'Align' class
+- removed 'ArrayUtil' and 'VectorUtil' classes
+- removed explicit garbage collection from AssetManager
+- removed 'Starling.handleLostContext' (now always enabled)
+- removed 'forTouch' argument in 'hitTest'-method
+- removed 'repeat' properties and method arguments from Texture classes (to be handled in Image class)
+- removed 'nativeFilters' from TextField (hoping that Starling's filters now close that gap)
+- removed 'Sprite.clipRect'; instead, 'DisplayObject.mask' was optimized for rectangular masks
+- changed organization of 'starling.utils' package
+- changed KeyboardEvent to be dispatched instead of broadcasted for better performance
+- changed default profile in Starling constructor to 'auto'
+- changed default for mipMapping throughout framework to 'false'
+- changed 'Texture.fromColor' so that it uses separate color and alpha
+- changed naming convention: parameters that need to be filled and returned are now called 'out'
+- changed all member variables using the m-prefix to underscores ("mData" => "_data")
+- optimized texture classes by splitting up 'ConcreteTexture' into several (internal) subclasses
+- optimized 'removeEventListener'
+- optimized how the TrueType compositor behaves when it reaches the maximum supported texture size
+- optimized rendering of empty TrueType text fields (by not rendering them, at all)
+- optimized 'RenderTexture' by disabling double-buffering in 'baselineExtended' and higher profiles
+- fixed that autoSizing in TextField always forced specific text alignments.
+- fixed 'globalToLocal' for 3D objects
+- fixed 'Polygon.toString' for empty polygons
+- fixed possible null reference exception in the Button class
+
+version 1.8 - 2016-02-29
+------------------------
+
+- added 'DisplayObject.scale' property for simple uniform scaling
+- added 'AssetManager.getTextureAtlasNames'
+- added try/catch around 'executeWhenApplicationIsActive' callbacks
+- added 'Button.smoothing' property
+- added property 'Starling.broadcastKeyboardEvents'
+- removed explicit Garbage collection from 'AssetManager' (thus avoiding hiccups)
+- optimized 'DisplayObject.alignPivot'
+- optimized 'BitmapFont.arrangeChars' (by avoiding 'splice')
+- optimized 'EventDispatcher.removeEventListener'
+- fixed 'QuadBatch.isStateChange' (ignored numQuads before)
+- fixed rare problem with 'DisplayObject.hitTestMask'
+- fixed that 'alphaWhen...' and 'scaleWhen...' properties of 'Button' class did not always work
+- fixed null reference exception in Button class
+- fixed that 'showStatsDisplay' did not always reveal the stats display
+- fixed invalid texture when unflattening a sprite with a cached filter
+- fixed transporter chief compatibility with latest version of 'ios-deploy'
+- fixed 'globalToLocal' for 3D objects
+
+version 1.7 - 2015-07-02
+------------------------
+
+- added support for stencil masking of all display objects via new 'mask' property
+- added 'Polygon' class for describing closed two-dimensional shapes
+- added 'Canvas' class for basic vector drawing functionality (main use right now: masking)
+- added support for video textures via 'Texture.fromNetStream' and 'Texture.fromCamera'
+- added 'property hints' to tweening methods (providing easier handling of color and angle)
+- added 'ArrayUtil' + 'VectorUtil' classes (for insertion & removal of objects without allocations)
+- added 'reverseFrames' method to MovieClip class
+- added 'leading' property to TextField class
+- added 'scaleWhenOver' property to Button class
+- added 'alphaWhenDown' property to Button class
+- added better touch handling for buttons (restoring downstate after rollout & -in)
+- added 'isCubeMap' property to 'ATFData' class
+- added support for enqueuing 'URLRequest' objects in AssetManager (thanks to SamYStudiO)
+- added 'standardConstrained' profile to 'auto' profile selection (thanks to Andras Csizmadia)
+- added 'standardExtended' profile to 'auto' profile selection (thanks to Andras Csizmadia)
+- added 'MathUtil.clamp()'
+- added optimized internal 'Polygon' implementations for circle, ellipse, and rectangle
+- added a warning message when 'frame' rectangle is used in an unsupported way.
+- added a warning message when using masks, but 'depthAndStencil' is deactivated in app descriptor
+- added support for 'AssetManager.transformData' to return 'null'
+- added 'complete' method to 'DelayedCall'
+- added support for bigger TTF text fields by lowering resolution (thanks to Haruka Kataoka)
+- added better parameter checks for 'BitmapFont' constructor
+- added 'Texture.maxSize' property to find out maximum texture dimensions on current device
+- added latest 'AGALMiniAssembler' with support for new profiles ('standardConstrained/Extended')
+- added null reference check to 'Juggler.tween'
+- added support for assigning Starling root class after constructor
+- added support for negative indices to 'DisplayObjectContainer.getChildAt'
+- added BlendMode 'mask' for RenderTexture drawing (thanks to Łukasz Łazarecki)
+- added 'Event.RENDER' event, dispatched by Starling right before rendering is about to start
+- added support for latest ATF format updates (coming with AIR 18)
+- optimized state changes caused by tinting, reducing draw calls in 'baselineExtened' or higher
+- optimized temporary object allocations of DisplayObjectContainer (avoiding 'splice')
+- optimized temporary object allocations in bitmap font registration
+- changed default of 'handleLostContext' to 'true'
+- fixed that 'autoScale' did not work for html text
+- fixed calculation of UV coordinates in DisplacementMapFilter in case of conflicting scale factors
+- fixed missing application of 'repeat' parameter in DisplacementMapFilter constructor
+- fixed accessibility of atlas and bitmap font textures in AssetManager (reverting to old behavior)
+- fixed error when calling 'clear' within 'RenderTexture.drawBundled'
+- fixed that 'mNextTween' was not set to null in 'Tween.reset' method (thanks to Sebastien Flory)
+- fixed possible memory leak when using async ATF texture upload (thanks to Vladimir Atamanov)
+- fixed that 'Button' state textures did not support frames
+- fixed that AssetManager failed loading when enqueued file contained non-ASCII path string
+- fixed that losing Stage3D context could result in runtime exception (thanks to Andras Csizmadia)
+- fixed that ATF textures were added to AssetManager prior to their 'onComplete' callback
+- fixed problems with TravisCI tests (thanks to Andras Csizmadia)
+- fixed that flattened filtered objects caused GPU memory to leak
+- fixed that DropShadow produced weird results in combination with 'clipRect'
+- fixed that 'RenderTexture.draw' did not restore original render target
+- fixed that lost context was not recognized from empty 'driverInfo' string
+- fixed that sound of a MovieClip's last frame was played twice
+- fixed that sound of a MovieClip's first frame was not played in first cycle
+- fixed that 'SoundTransform' object was not always used by MovieClip
+- fixed that 'HOVER' event was sometimes dispatched on devices that do not support mouse cursors
+- fixed null-reference error in AssetManager caused by io-error while restoring textures
+- fixed possible problems caused by 'getTimer' overflow
+
 version 1.6 - 2014-12-12
 ------------------------
 
