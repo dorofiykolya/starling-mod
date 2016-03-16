@@ -1,7 +1,7 @@
 // =================================================================================================
 //
-//    Starling Framework
-//    Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Starling Framework
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //    This program is free software. You can redistribute and/or modify it
 //    in accordance with the terms of the accompanying license agreement.
@@ -95,17 +95,17 @@ package starling.display
         public function advanceTime(passedTime:Number):void
         {
             var now:Number = getTimer() / 1000.0;
-			mFrame++;
-			var delta:Number = now - mFpsLastTime;
-			if (delta > 1)
-			{
-				mFps = mFrame / delta;
-				mFps *= 10.0;
-				mFps |= 0;
-				mFps /= 10.0;
-				mFrame = 0;
-				mFpsLastTime = now;
-			}
+            mFrame++;
+            var delta:Number = now - mFpsLastTime;
+            if (delta > 1)
+            {
+                mFps = mFrame / delta;
+                mFps *= 10.0;
+                mFps |= 0;
+                mFps /= 10.0;
+                mFrame = 0;
+                mFpsLastTime = now;
+            }
             
             mEnterFrameEvent.reset(Event.ENTER_FRAME, false, passedTime);
             if (mBroadcastEnterFrameEvent)

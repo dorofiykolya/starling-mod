@@ -1,7 +1,7 @@
 // =================================================================================================
 //
-//    Starling Framework
-//    Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Starling Framework
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //    This program is free software. You can redistribute and/or modify it
 //    in accordance with the terms of the accompanying license agreement.
@@ -150,17 +150,18 @@ package starling.display
         private var mTransformationMatrix3D:Matrix3D;
         private var mOrientationChanged:Boolean;
         private var mFilter:FragmentFilter;
-		
+        
         private var mIs3D:Boolean;
         private var mMask:DisplayObject;
         private var mIsMask:Boolean;
-		private var mIncludeInParentBounds:Boolean;
-		private var mSaturated:Boolean;
+        private var mIncludeInParentBounds:Boolean;
+        private var mSaturated:Boolean;
         
         /** Helper objects. */
         private static var sAncestors:Vector.<DisplayObject> = new <DisplayObject>[];
         private static var sHelperPoint:Point = new Point();
         private static var sHelperPoint3D:Vector3D = new Vector3D();
+        private static var sHelperPointAlt3D:Vector3D = new Vector3D();
         private static var sHelperRect:Rectangle = new Rectangle();
         private static var sHelperMatrix:Matrix  = new Matrix();
         private static var sHelperMatrixAlt:Matrix  = new Matrix();
@@ -318,8 +319,9 @@ package starling.display
                     sHelperMatrixAlt.invert();
                 }
 
-                MatrixUtil.transformPoint(sHelperMatrixAlt, localPoint, sHelperPoint);
-                return mMask.hitTest(sHelperPoint, true) != null;
+                var helperPoint:Point = localPoint == sHelperPoint ? new Point() : sHelperPoint;
+                MatrixUtil.transformPoint(sHelperMatrixAlt, localPoint, helperPoint);
+                return mMask.hitTest(helperPoint, true) != null;
             }
             else return true;
         }
@@ -349,8 +351,8 @@ package starling.display
             if (is3D)
             {
                 globalToLocal3D(globalPoint, sHelperPoint3D);
-                return MathUtil.intersectLineWithXYPlane(
-                    stage.cameraPosition, sHelperPoint3D, resultPoint);
+                stage.getCameraPosition(this, sHelperPointAlt3D);
+                return MathUtil.intersectLineWithXYPlane(sHelperPointAlt3D, sHelperPoint3D, resultPoint);
             }
             else
             {
@@ -381,7 +383,7 @@ package starling.display
          *  of the object. If you pass no arguments, it will be centered. */ 
         public function alignPivot(hAlign:String="center", vAlign:String="center"):void
         {
-            var bounds:Rectangle = getBounds(this);
+            var bounds:Rectangle = getBounds(this, sHelperRect);
             mOrientationChanged = true;
             
             if (hAlign == HAlign.LEFT)        mPivotX = bounds.x;
@@ -838,7 +840,8 @@ package starling.display
             }
         }
         
-        /** The horizontal scale factor. '1' means no scale, negative values flip the object. */
+        /** The horizontal scale factor. '1' means no scale, negative values flip the object.
+         *  @default 1 */
         public function get scaleX():Number { return mScaleX; }
         public function set scaleX(value:Number):void 
         { 
@@ -849,7 +852,8 @@ package starling.display
             }
         }
         
-        /** The vertical scale factor. '1' means no scale, negative values flip the object. */
+        /** The vertical scale factor. '1' means no scale, negative values flip the object.
+         *  @default 1 */
         public function get scaleY():Number { return mScaleY; }
         public function set scaleY(value:Number):void 
         { 
@@ -859,6 +863,11 @@ package starling.display
                 mOrientationChanged = true;
             }
         }
+
+        /** Sets both 'scaleX' and 'scaleY' to the same value. The getter simply returns the
+         *  value of 'scaleX' (even if the scaling values are different). @default 1 */
+        public function get scale():Number { return scaleX; }
+        public function set scale(value:Number):void { scaleX = scaleY = value; }
         
         /** The horizontal skew angle in radians. */
         public function get skewX():Number { return mSkewX; }
@@ -900,7 +909,7 @@ package starling.display
             }
         }
         
-        /** The opacity of the object. 0 = transparent, 1 = opaque. */
+        /** The opacity of the object. 0 = transparent, 1 = opaque. @default 1 */
         public function get alpha():Number { return mAlpha; }
         public function set alpha(value:Number):void 
         { 

@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2015 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -124,7 +124,9 @@ package starling.display
         public function clear():void
         {
             mVertexData.numVertices = 0;
-            mIndexData.length  = 0;
+            mIndexData.length = 0;
+            mPolygons.length = 0;
+            destroyBuffers();
         }
 
         /** @inheritDoc */

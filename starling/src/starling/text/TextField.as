@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -107,6 +107,7 @@ package starling.text
         private var mAutoScale:Boolean;
         private var mAutoSize:String;
         private var mKerning:Boolean;
+        private var mLeading:Number;
         private var mNativeFilters:Array;
         private var mRequiresRedraw:Boolean;
         private var mIsHtmlText:Boolean;
@@ -136,6 +137,7 @@ package starling.text
             mVAlign = VAlign.CENTER;
             mBorder = null;
             mKerning = true;
+            mLeading = 0.0;
             mBold = bold;
             mAutoSize = TextFieldAutoSize.NONE;
             mHitArea = new Rectangle(0, 0, width, height);
@@ -222,7 +224,7 @@ package starling.text
                     mTextBounds = new Rectangle();
 
                 bitmapData = renderText(scale, mTextBounds);
-                texture.root.uploadBitmapData(renderText(scale, mTextBounds));
+                texture.root.uploadBitmapData(bitmapData);
                 bitmapData.dispose();
                 bitmapData = null;
             };
@@ -255,6 +257,13 @@ package starling.text
          */
         protected function formatText(textField:flash.text.TextField, textFormat:TextFormat):void {}
 
+        /** Forces a redraw of the current contents right before the display object is rendered.
+         *  Useful especially in combination with the "formatText" method. */
+        protected final function requireRedraw():void
+        {
+            mRequiresRedraw = true;
+        }
+
         private function renderText(scale:Number, resultTextBounds:Rectangle):BitmapData
         {
             var width:Number  = mHitArea.width  * scale;
@@ -272,11 +281,12 @@ package starling.text
                 height = int.MAX_VALUE;
                 vAlign = VAlign.TOP;
             }
-            
-            var textFormat:TextFormat = new TextFormat(mFontName, 
+
+            var textFormat:TextFormat = new TextFormat(mFontName,
                 mFontSize * scale, mColor, mBold, mItalic, mUnderline, null, null, hAlign);
             textFormat.kerning = mKerning;
-            
+            textFormat.leading = mLeading;
+
             sNativeTextField.defaultTextFormat = textFormat;
             sNativeTextField.width = width;
             sNativeTextField.height = height;
@@ -452,8 +462,8 @@ package starling.text
                 vAlign = VAlign.TOP;
             }
             
-            bitmapFont.fillQuadBatch(mQuadBatch,
-                width, height, mText, mFontSize, mColor, hAlign, vAlign, mAutoScale, mKerning, mLetterSpacing);
+            bitmapFont.fillQuadBatch(mQuadBatch, width, height, mText,
+                    mFontSize, mColor, hAlign, vAlign, mAutoScale, mKerning, mLeading, mLetterSpacing);
             
             mQuadBatch.batchable = mBatchable;
             
@@ -566,17 +576,17 @@ package starling.text
         
         public function get letterSpacing():Number { return mLetterSpacing; }
         public function set letterSpacing(value:Number):void
-		{
-			if (mLetterSpacing != value)
-			{
-				if (value != value)
-				{
-					value = 0;
-				}
-				mLetterSpacing = value;
-				mRequiresRedraw = true;
-			}
-		}
+        {
+            if (mLetterSpacing != value)
+            {
+                if (value != value)
+                {
+                    value = 0;
+                }
+                mLetterSpacing = value;
+                mRequiresRedraw = true;
+            }
+        }
         
         /** The name of the font (true type or bitmap font). */
         public function get fontName():String { return mFontName; }
@@ -769,6 +779,17 @@ package starling.text
             if (mIsHtmlText != value)
             {
                 mIsHtmlText = value;
+                mRequiresRedraw = true;
+            }
+        }
+
+        /** The amount of vertical space (called 'leading') between lines. @default 0 */
+        public function get leading():Number { return mLeading; }
+        public function set leading(value:Number):void
+        {
+            if (mLeading != value)
+            {
+                mLeading = value;
                 mRequiresRedraw = true;
             }
         }

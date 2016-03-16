@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -339,7 +339,7 @@ package starling.filters
                 // the filter output in object coordinates, we wrap it in a QuadBatch: that way,
                 // we can modify it with a transformation matrix.
                 
-                var quadBatch:QuadBatch = new CacheQuadBatch();
+                var quadBatch:QuadBatch = new QuadBatch();
                 var image:Image = new Image(cacheTexture);
                 
                 // targetSpace could be null, so we calculate the matrix from the other side
@@ -349,6 +349,7 @@ package starling.filters
                 MatrixUtil.prependTranslation(sTransformationMatrix,
                     bounds.x + mOffsetX, bounds.y + mOffsetY);
                 quadBatch.addImage(image, 1.0, sTransformationMatrix);
+                quadBatch.ownsTexture = true;
 
                 return quadBatch;
             }
@@ -544,20 +545,16 @@ package starling.filters
         /** @private */
         starling_internal function compile(object:DisplayObject):QuadBatch
         {
-            if (mCache) return mCache;
-            else
-            {
-                var support:RenderSupport;
-                var stage:Stage = object.stage;
-                var quadBatch:QuadBatch;
+            var support:RenderSupport;
+            var stage:Stage = object.stage;
+            var quadBatch:QuadBatch;
 
-                support = new RenderSupport();
-                object.getTransformationMatrix(stage, support.modelViewMatrix);
-                quadBatch = renderPasses(object, support, 1.0, true);
-                support.dispose();
+            support = new RenderSupport();
+            object.getTransformationMatrix(stage, support.modelViewMatrix);
+            quadBatch = renderPasses(object, support, 1.0, true);
+            support.dispose();
 
-                return quadBatch;
-            }
+            return quadBatch;
         }
         
         // properties
@@ -619,18 +616,5 @@ package starling.filters
         /** The ID of the first register of the modelview-projection constant (a 4x4 matrix). */
         protected final function get mvpConstantID():int { return mMvpConstantID; }
         protected final function set mvpConstantID(value:int):void { mMvpConstantID = value; }
-    }
-}
-
-import starling.display.QuadBatch;
-
-/** The QuadBatch version used for cached filters. Different to a normal QuadBatch, it owns
- *  its texture and will dispose it when being disposed itself. */
-class CacheQuadBatch extends QuadBatch
-{
-    override public function dispose():void
-    {
-        if (texture) texture.dispose();
-        super.dispose();
     }
 }

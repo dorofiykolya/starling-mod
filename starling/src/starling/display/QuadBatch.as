@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -74,6 +74,7 @@ package starling.display
         private var mSyncRequired:Boolean;
         private var mBatchable:Boolean;
         private var mForceTinted:Boolean;
+        private var mOwnsTexture:Boolean;
 
         private var mTinted:Boolean;
         private var mTexture:Texture;
@@ -82,8 +83,8 @@ package starling.display
         private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
         private var mIndexBuffer:IndexBuffer3D;
-		
-		private var mCreateBuffers:Boolean;
+        
+        private var mCreateBuffers:Boolean;
         
         /** The raw vertex data of the quad. After modifying its contents, call
          *  'onVertexDataChanged' to upload the changes to the vertex buffers. Don't change the
@@ -94,19 +95,28 @@ package starling.display
         private static var sHelperMatrix:Matrix = new Matrix();
         private static var sRenderAlpha:Vector.<Number> = new <Number>[1.0, 1.0, 1.0, 1.0];
         private static var sProgramNameCache:Dictionary = new Dictionary();
-		private static var sNotSaturation:Vector.<Number> = new <Number>[0.299, 0.587, 0.114, 1.0];
+        private static var sNotSaturation:Vector.<Number> = new <Number>[0.299, 0.587, 0.114, 1.0];
         
-        /** Creates a new QuadBatch instance with empty batch data. */
-        public function QuadBatch(createBuffers:Boolean = true)
+        /** Creates a new QuadBatch instance with empty batch data.
+         *
+         *  @param optimizeForProfile  if enabled, the 'forceTinted' property will be automatically
+         *                             activated in 'baselineExtended' and better profiles. */
+        public function QuadBatch(optimizeForProfile:Boolean=false, createBuffers:Boolean=true)
         {
-			mCreateBuffers = createBuffers;
+            mCreateBuffers = createBuffers;
             mVertexData = new VertexData(0, true);
             mIndexData = new <uint>[];
             mNumQuads = 0;
             mTinted = false;
             mSyncRequired = false;
             mBatchable = false;
-            mForceTinted = false;
+            mOwnsTexture = false;
+
+            if (optimizeForProfile)
+            {
+                var profile:String = Starling.current.profile;
+                mForceTinted = profile != "baselineConstrained" && profile != "baseline";
+            }
 
             // Handle lost context. We use the conventional event here (not the one from Starling)
             // so we're able to create a weak event listener; this avoids memory leaks when people 
@@ -114,7 +124,7 @@ package starling.display
             Starling.current.stage3D.addEventListener(Event.CONTEXT3D_CREATE, 
                                                       onContextCreated, false, 0, true);
         }
-        
+
         /** Disposes vertex- and index-buffer. */
         public override function dispose():void
         {
@@ -124,6 +134,9 @@ package starling.display
             mVertexData.numVertices = 0;
             mIndexData.length = 0;
             mNumQuads = 0;
+
+            if (mTexture && mOwnsTexture)
+                mTexture.dispose();
             
             super.dispose();
         }
@@ -150,9 +163,10 @@ package starling.display
             clone.mTexture = mTexture;
             clone.mSmoothing = mSmoothing;
             clone.mSyncRequired = true;
+            clone.mForceTinted = forceTinted;
             clone.blendMode = blendMode;
             clone.alpha = alpha;
-			clone.saturated = saturated;
+            clone.saturated = saturated;
             return clone;
         }
         
@@ -168,8 +182,8 @@ package starling.display
         
         protected function createBuffers():void
         {
-			if (!mCreateBuffers) return;
-			
+            if (!mCreateBuffers) return;
+            
             destroyBuffers();
 
             var numVertices:int = mVertexData.numVertices;
@@ -206,8 +220,8 @@ package starling.display
         /** Uploads the raw data of all batched quads to the vertex buffer. */
         protected function syncBuffers():void
         {
-			if (!mCreateBuffers) return;
-			
+            if (!mCreateBuffers) return;
+            
             if (mVertexBuffer == null)
             {
                 createBuffers();
@@ -245,9 +259,9 @@ package starling.display
             context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET, 
                                       Context3DVertexBufferFormat.FLOAT_2); 
             if (!this.saturated || !saturated)
-			{
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, sNotSaturation, 1);
-			}
+            {
+                context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, sNotSaturation, 1);
+            }
             if (mTexture == null || tinted || !this.saturated || !saturated)
                 context.setVertexBufferAt(1, mVertexBuffer, VertexData.COLOR_OFFSET, 
                                           Context3DVertexBufferFormat.FLOAT_4);
@@ -272,9 +286,12 @@ package starling.display
         }
         
         /** Resets the batch. The vertex- and index-buffers remain their size, so that they
-         *  can be reused quickly. */  
+         *  can be reused quickly. */
         public function reset():void
         {
+            if (mTexture && mOwnsTexture)
+                mTexture.dispose();
+
             mNumQuads = 0;
             mTexture = null;
             mSmoothing = null;
@@ -307,7 +324,7 @@ package starling.display
             if (mNumQuads == 0) 
             {
                 this.blendMode = blendMode ? blendMode : quad.blendMode;
-				this.saturated = quad.saturated && saturated;
+                this.saturated = quad.saturated && saturated;
                 mTexture = texture;
                 mTinted = mForceTinted || quad.tinted || parentAlpha != 1.0;
                 mSmoothing = smoothing;
@@ -339,7 +356,7 @@ package starling.display
             if (mNumQuads == 0) 
             {
                 this.blendMode = blendMode ? blendMode : quadBatch.blendMode;
-				this.saturated = quadBatch.saturated && saturated;
+                this.saturated = quadBatch.saturated && saturated;
                 mTexture = quadBatch.mTexture;
                 mTinted = mForceTinted || quadBatch.mTinted || parentAlpha != 1.0;
                 mSmoothing = quadBatch.mSmoothing;
@@ -355,18 +372,18 @@ package starling.display
             mSyncRequired = true;
             mNumQuads += numQuads;
         }
-		
-		/** Remove the quad in current QuadBatch */
-		public function removeQuad(quadID:int):void
-		{
-			if (mNumQuads > 0)
-			{
-				var vertexID:int = quadID * 4;
-				mVertexData.remove(vertexID, 4);
-				mNumQuads--;
-				mSyncRequired = true;
-			}
-		}
+        
+        /** Remove the quad in current QuadBatch */
+        public function removeQuad(quadID:int):void
+        {
+            if (mNumQuads > 0)
+            {
+                var vertexID:int = quadID * 4;
+                mVertexData.remove(vertexID, 4);
+                mNumQuads--;
+                mSyncRequired = true;
+            }
+        }
         
         /** Indicates if specific quads can be added to the batch without causing a state change. 
          *  A state change occurs if the quad uses a different base texture, has a different 
@@ -384,7 +401,7 @@ package starling.display
                        mTexture.repeat != texture.repeat ||
                        mSmoothing != smoothing ||
                        mTinted != (mForceTinted || tinted || parentAlpha != 1.0) ||
-					   this.saturated != saturated ||
+                       this.saturated != saturated ||
                        this.blendMode != blendMode;
             else return true;
         }
@@ -438,52 +455,52 @@ package starling.display
             
             mSyncRequired = true;
         }
-		
-		/** Updates the uv value of specific quad */
-		public function setQuadTexture(quadID:int, texture:Texture):void
-		{
-			if (texture == null)
-			{
-				throw new ArgumentError("texture cannot be null");
-			}
-			else if (mTexture.base != texture.base)
-			{
-				throw new ArgumentError("parameter texture.base must be equals QuadBatch.texture.base");
-			}
-			
-			var vertexID:int = quadID * 4;
-			
-			mVertexData.setTexCoords(vertexID    , 0.0, 0.0);
-			mVertexData.setTexCoords(vertexID + 1, 1.0, 0.0);
-			mVertexData.setTexCoords(vertexID + 2, 0.0, 1.0);
-			mVertexData.setTexCoords(vertexID + 3, 1.0, 1.0);
-			
-			texture.adjustVertexData(mVertexData, vertexID, 4);
-			
-			mSyncRequired = true;
-		}
-		
-		/** Updates the uv value of specific quad */
-		public function setQuadImage(quadID:int, image:Image):void
-		{
-			if (image == null)
-			{
-				throw new ArgumentError("image cannot be null");
-			}
-			else if (mTexture.base != image.texture.base)
-			{
-				throw new ArgumentError("parameter image.texture.base must be equals QuadBatch.texture.base");
-			}
-			
-			var alpha:Number = this.alpha * image.alpha;
+        
+        /** Updates the uv value of specific quad */
+        public function setQuadTexture(quadID:int, texture:Texture):void
+        {
+            if (texture == null)
+            {
+                throw new ArgumentError("texture cannot be null");
+            }
+            else if (mTexture.base != texture.base)
+            {
+                throw new ArgumentError("parameter texture.base must be equals QuadBatch.texture.base");
+            }
+
             var vertexID:int = quadID * 4;
-			
+
+            mVertexData.setTexCoords(vertexID    , 0.0, 0.0);
+            mVertexData.setTexCoords(vertexID + 1, 1.0, 0.0);
+            mVertexData.setTexCoords(vertexID + 2, 0.0, 1.0);
+            mVertexData.setTexCoords(vertexID + 3, 1.0, 1.0);
+
+            texture.adjustVertexData(mVertexData, vertexID, 4);
+
+            mSyncRequired = true;
+        }
+
+        /** Updates the uv value of specific quad */
+        public function setQuadImage(quadID:int, image:Image):void
+        {
+            if (image == null)
+            {
+                throw new ArgumentError("image cannot be null");
+            }
+            else if (mTexture.base != image.texture.base)
+            {
+                throw new ArgumentError("parameter image.texture.base must be equals QuadBatch.texture.base");
+            }
+
+            var alpha:Number = this.alpha * image.alpha;
+            var vertexID:int = quadID * 4;
+
             image.copyVertexDataTransformedTo(mVertexData, vertexID, image.transformationMatrix);
-			if (alpha != 1.0)
+            if (alpha != 1.0)
                 mVertexData.scaleAlpha(vertexID, alpha, 4);
             
             mSyncRequired = true;
-		}
+        }
         
         /** Returns the alpha value of the first vertex of a specific quad. */
         public function getQuadAlpha(quadID:int):Number
@@ -576,7 +593,7 @@ package starling.display
                 {
                     batch2 = quadBatches[j];
                     if (!batch1.isStateChange(batch2.saturated, batch2.tinted, 1.0, batch2.texture,
-                                              batch2.smoothing, batch2.blendMode))
+                                              batch2.smoothing, batch2.blendMode, batch2.numQuads))
                     {
                         batch1.addQuadBatch(batch2);
                         batch2.dispose();
@@ -615,8 +632,8 @@ package starling.display
                 objectAlpha = 1.0;
                 blendMode = object.blendMode;
                 ignoreCurrentFilter = true;
-                if (quadBatches.length == 0) quadBatches.push(new QuadBatch());
-                else quadBatches[0].reset();
+                if (quadBatches.length == 0) quadBatches[0] = new QuadBatch(true);
+                else { quadBatches[0].reset(); quadBatches[0].ownsTexture = false; }
             }
             else
             {
@@ -634,10 +651,13 @@ package starling.display
                     quadBatchID = compileObject(object, quadBatches, quadBatchID,
                                                 transformationMatrix, alpha, blendMode, true);
                 }
-                
+
                 quadBatchID = compileObject(filter.compile(object), quadBatches, quadBatchID,
                                             transformationMatrix, alpha, blendMode);
-                
+
+                // textures of a compiled filter need to be disposed!
+                quadBatches[quadBatchID].ownsTexture = true;
+
                 if (filter.mode == FragmentFilterMode.BELOW)
                 {
                     quadBatchID = compileObject(object, quadBatches, quadBatchID,
@@ -669,7 +689,7 @@ package starling.display
                 var smoothing:String;
                 var tinted:Boolean;
                 var numQuads:int;
-				var saturated:Boolean;
+                var saturated:Boolean;
                 
                 if (quad)
                 {
@@ -678,7 +698,7 @@ package starling.display
                     smoothing = image ? image.smoothing : null;
                     tinted = quad.tinted;
                     numQuads = 1;
-					saturated = quad.saturated;
+                    saturated = quad.saturated;
                 }
                 else
                 {
@@ -686,20 +706,21 @@ package starling.display
                     smoothing = batch.mSmoothing;
                     tinted = batch.mTinted;
                     numQuads = batch.mNumQuads;
-					saturated = batch.saturated;
+                    saturated = batch.saturated;
                 }
                 
                 quadBatch = quadBatches[quadBatchID];
-                
+
                 if (quadBatch.isStateChange(saturated, tinted, alpha*objectAlpha, texture, 
                                             smoothing, blendMode, numQuads))
                 {
                     quadBatchID++;
-                    if (quadBatches.length <= quadBatchID) quadBatches.push(new QuadBatch());
+                    if (quadBatches.length <= quadBatchID) quadBatches.push(new QuadBatch(true));
                     quadBatch = quadBatches[quadBatchID];
                     quadBatch.reset();
+                    quadBatch.ownsTexture = false;
                 }
-                
+
                 if (quad)
                     quadBatch.addQuad(quad, alpha, texture, smoothing, transformationMatrix, blendMode);
                 else
@@ -719,7 +740,7 @@ package starling.display
             
             return quadBatchID;
         }
-        
+
         // properties
         
         /** Returns the number of quads that have been added to the batch. */
@@ -759,6 +780,10 @@ package starling.display
             mForceTinted = value;
         }
 
+        /** If enabled, the texture (if there is one) will be disposed when the QuadBatch is. */
+        public function get ownsTexture():Boolean { return mOwnsTexture; }
+        public function set ownsTexture(value:Boolean):void { mOwnsTexture = value; }
+
         /** Indicates the number of quads for which space is allocated (vertex- and index-buffers).
          *  If you add more quads than what fits into the current capacity, the QuadBatch is
          *  expanded automatically. However, if you know beforehand how many vertices you need,
@@ -797,8 +822,8 @@ package starling.display
             var target:Starling = Starling.current;
             var programName:String;
             if (saturated) programName = QUAD_PROGRAM_NAME;
-			else programName = QUAD_PROGRAM_NAME + int(1 << 7).toString(16);
-			
+            else programName = QUAD_PROGRAM_NAME + int(1 << 7).toString(16);
+            
             if (mTexture)
                 programName = getImageProgramName(saturated, tinted, mTexture.mipMapping, 
                     mTexture.repeat, mTexture.format, mSmoothing);
@@ -822,49 +847,49 @@ package starling.display
                 if (!mTexture) // Quad-Shaders
                 {
                     vertexShader =
-						saturated?
-							"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-							"mul v0, va1, vc0 \n"  	// multiply alpha (vc0) with color (va1)
-							:
-							"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-							"mul v0, va1, vc0 \n" ; 
+                        saturated?
+                            "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+                            "mul v0, va1, vc0 \n"   // multiply alpha (vc0) with color (va1)
+                            :
+                            "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+                            "mul v0, va1, vc0 \n" ; 
                     
                     fragmentShader =
-						saturated?
-							"mov oc, v0 					\n"  	// output color
-							:
-							"mov ft1 v0						\n" +
-							"dp3 ft1.xyz, ft1.xyz, fc0.xyz 	\n" + 
-							"mov oc, ft1					\n";
+                        saturated?
+                            "mov oc, v0                     \n"      // output color
+                            :
+                            "mov ft1 v0                     \n" +
+                            "dp3 ft1.xyz, ft1.xyz, fc0.xyz 	\n" + 
+                            "mov oc, ft1                    \n";
                 }
                 else // Image-Shaders
                 {
                     vertexShader =
-						saturated?
-							tinted ?
-								"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-								"mul v0, va1, vc0 \n" + // multiply alpha (vc0) with color (va1)
-								"mov v1, va2      \n"   // pass texture coordinates to fragment program
-								:
-								"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-								"mov v1, va2      \n"  	// pass texture coordinates to fragment program
-							:
-							"m44 op, va0, vc1 \n" + 	// 4x4 matrix transform to output clipspace
-							"mul v0, va1, vc0 \n" +
-							"mov v1, va2      \n" ;  	// pass texture coordinates to fragment program
+                        saturated?
+                            tinted ?
+                                "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+                                "mul v0, va1, vc0 \n" + // multiply alpha (vc0) with color (va1)
+                                "mov v1, va2      \n"   // pass texture coordinates to fragment program
+                                :
+                                "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+                                "mov v1, va2      \n"   // pass texture coordinates to fragment program
+                            :
+                            "m44 op, va0, vc1 \n" +     // 4x4 matrix transform to output clipspace
+                            "mul v0, va1, vc0 \n" +
+                            "mov v1, va2      \n" ;      // pass texture coordinates to fragment program
                     
                     fragmentShader = 
-						saturated?
-							tinted ?
-									"tex ft1,  v1, fs0 <???> \n" + 	// sample texture 0
-									"mul  oc, ft1,  v0       \n"   	// multiply color with texel color
-									:
-									"tex  oc,  v1, fs0 <???> \n"  	// sample texture 0
-								:
-								"tex ft1,  v1, fs0 <???> \n" + 		// sample texture 0
-								"mul ft1, ft1, v0 \n" +
-								"dp3 ft1.xyz, ft1.xyz, fc0.xyz \n" +
-								"mov  oc, ft1       \n";   			// multiply color with texel color	
+                        saturated?
+                            tinted ?
+                                    "tex ft1,  v1, fs0 <???> \n" +  // sample texture 0
+                                    "mul  oc, ft1,  v0       \n"    // multiply color with texel color
+                                    :
+                                    "tex  oc,  v1, fs0 <???> \n"    // sample texture 0
+                                :
+                                "tex ft1,  v1, fs0 <???> \n" +      // sample texture 0
+                                "mul ft1, ft1, v0 \n" +
+                                "dp3 ft1.xyz, ft1.xyz, fc0.xyz \n" +
+                                "mov  oc, ft1       \n";            // multiply color with texel color	
                     
                     fragmentShader = fragmentShader.replace("<???>",
                         RenderSupport.getTextureLookupFlags(
@@ -898,8 +923,8 @@ package starling.display
             else if (format == "compressedAlpha")
                 bitField |= 1 << 6;
             
-			if (saturated) bitField |= 1 << 7;
-			
+            if (saturated) bitField |= 1 << 7;
+            
             var name:String = sProgramNameCache[bitField];
             
             if (name == null)

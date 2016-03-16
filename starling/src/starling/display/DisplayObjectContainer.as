@@ -1,7 +1,7 @@
 // =================================================================================================
 //
-//    Starling Framework
-//    Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Starling Framework
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //    This program is free software. You can redistribute and/or modify it
 //    in accordance with the terms of the accompanying license agreement.
@@ -415,7 +415,7 @@ package starling.display
             // The event listeners might modify the display tree, which could make the loop crash. 
             // Thus, we collect them in a list and iterate over that list instead.
             // And since another listener could call this method internally, we have to take 
-            // care that the static helper vector does not get currupted.
+            // care that the static helper vector does not get corrupted.
             
             var fromIndex:int = sBroadcastListeners.length;
             getChildEventListeners(this, event.type, sBroadcastListeners);

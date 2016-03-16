@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011-2014 Gamua. All Rights Reserved.
+//	Copyright Gamua GmbH. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -60,6 +60,10 @@ package starling.core
     
     /** Dispatched when a fatal error is encountered. The 'data' property contains an error string. */
     [Event(name="fatalError", type="starling.events.Event")]
+
+    /** Dispatched when the display list is about to be rendered. This event provides the last
+     *  opportunity to make changes before the display list is rendered. */
+    [Event(name="render", type="starling.events.Event")]
 
     /** The Starling class represents the core of the Starling framework.
      *
@@ -181,7 +185,7 @@ package starling.core
     public class Starling extends EventDispatcher
     {
         /** The version of the Starling framework. */
-        public static const VERSION:String = "1.6.1";
+        public static const VERSION:String = "1.8";
         
         /** The key for the shader programs stored in 'contextData' */
         private static const PROGRAM_DATA_NAME:String = "Starling.programs"; 
@@ -207,6 +211,7 @@ package starling.core
         private var mStarted:Boolean;
         private var mRendering:Boolean;
         private var mSupportHighResolutions:Boolean;
+        private var mBroadcastKeyboardEvents:Boolean;
         
         private var mViewPort:Rectangle;
         private var mPreviousViewPort:Rectangle;
@@ -276,6 +281,7 @@ package starling.core
             mSimulateMultitouch = false;
             mEnableErrorChecking = false;
             mSupportHighResolutions = false;
+            mBroadcastKeyboardEvents = true;
             mLastFrameTimestamp = getTimer() / 1000.0;
             mSupport  = new RenderSupport();
             mIsRender = true;
@@ -463,7 +469,7 @@ package starling.core
         }
         
         /** Calls <code>advanceTime()</code> (with the time that has passed since the last frame)
-         *  and <code>render()</code>. */ 
+         *  and <code>render()</code>. */
         public function nextFrame():void
         {
             var now:Number = getTimer() / 1000.0;
@@ -472,6 +478,9 @@ package starling.core
             
             // to avoid overloading time-based animations, the maximum delta is truncated.
             if (passedTime > 1.0) passedTime = 1.0;
+
+            // after about 25 days, 'getTimer()' will roll over. A rare event, but still ...
+            if (passedTime < 0.0) passedTime = 1.0 / mNativeStage.frameRate;
 
             advanceTime(passedTime);
             render();
@@ -492,7 +501,11 @@ package starling.core
         }
         
         /** Renders the complete display list. Before rendering, the context is cleared; afterwards,
-         *  it is presented. This can be avoided by enabling <code>shareContext</code>.*/ 
+         *  it is presented (to avoid this, enable <code>shareContext</code>).
+         *
+         *  <p>This method also dispatches an <code>Event.RENDER</code>-event on the Starling
+         *  instance. That's the last opportunity to make changes before the display list is
+         *  rendered.</p> */
         public function render():void
         {
             if (!contextValid || !mIsRender)
@@ -500,14 +513,15 @@ package starling.core
             
             makeCurrent();
             updateViewPort();
-            mSupport.nextFrame();
-            
+            dispatchEventWith(starling.events.Event.RENDER);
+
             var scaleX:Number = mViewPort.width  / mStage.stageWidth;
             var scaleY:Number = mViewPort.height / mStage.stageHeight;
             
             mContext.setDepthTest(false, Context3DCompareMode.ALWAYS);
             mContext.setCulling(Context3DTriangleFace.NONE);
 
+            mSupport.nextFrame();
             mSupport.stencilReferenceValue = 0;
             mSupport.renderTarget = null; // back buffer
             mSupport.setProjectionMatrix(
@@ -578,7 +592,8 @@ package starling.core
                                              wantsBestResolution:Boolean=false):void
         {
             enableDepthAndStencil &&= SystemUtil.supportsDepthAndStencil;
-
+            width = (width < 32) ? 32 : width;
+            height = (height < 32) ? 32 : height;
             var configureBackBuffer:Function = mContext.configureBackBuffer;
             var methodArgs:Array = [width, height, antiAlias, enableDepthAndStencil];
             if (configureBackBuffer.length > 4) methodArgs.push(wantsBestResolution);
@@ -724,7 +739,9 @@ package starling.core
                 event.ctrlKey, event.altKey, event.shiftKey);
             
             makeCurrent();
-            mStage.broadcastEvent(keyEvent);
+
+            if (mBroadcastKeyboardEvents) mStage.broadcastEvent(keyEvent);
+            else mStage.dispatchEvent(keyEvent);
             
             if (keyEvent.isDefaultPrevented())
                 event.preventDefault();
@@ -822,7 +839,7 @@ package starling.core
             mTouchProcessor.enqueue(touchID, phase, globalX, globalY, pressure, width, height);
             
             // allow objects that depend on mouse-over state to be updated immediately
-            if (event.type == MouseEvent.MOUSE_UP)
+            if (event.type == MouseEvent.MOUSE_UP && Mouse.supportsCursor)
                 mTouchProcessor.enqueue(touchID, TouchPhase.HOVER, globalX, globalY);
         }
         
@@ -946,9 +963,13 @@ package starling.core
             mSimulateMultitouch = value;
             if (mContext) mTouchProcessor.simulateMultitouch = value;
         }
-        
-        /** Indicates if Stage3D render methods will report errors. Activate only when needed,
-         *  as this has a negative impact on performance. @default false */
+
+        /** Indicates if Stage3D render methods will report errors. It's recommended to activate
+         *  this when writing custom rendering code (shaders, etc.), since you'll get more detailed
+         *  error messages. However, it has a very negative impact on performance, and it prevents
+         *  ATF textures from being restored on a context loss. Never activate for release builds!
+         *
+         *  @default false */
         public function get enableErrorChecking():Boolean { return mEnableErrorChecking; }
         public function set enableErrorChecking(value:Boolean):void 
         { 
@@ -1013,18 +1034,18 @@ package starling.core
             }
             else
             {
+                var stageWidth:int  = mStage.stageWidth;
+                var stageHeight:int = mStage.stageHeight;
+
                 if (mStatsDisplay == null)
                 {
                     mStatsDisplay = new StatsDisplay();
                     mStatsDisplay.touchable = false;
-                    mStage.addChild(mStatsDisplay);
                 }
-                
-                var stageWidth:int  = mStage.stageWidth;
-                var stageHeight:int = mStage.stageHeight;
-                
+
+                mStage.addChild(mStatsDisplay);
                 mStatsDisplay.scaleX = mStatsDisplay.scaleY = scale;
-                
+
                 if (hAlign == HAlign.LEFT) mStatsDisplay.x = 0;
                 else if (hAlign == HAlign.RIGHT) mStatsDisplay.x = stageWidth - mStatsDisplay.width; 
                 else mStatsDisplay.x = int((stageWidth - mStatsDisplay.width) / 2);
@@ -1099,6 +1120,15 @@ package starling.core
                 if (contextValid) updateViewPort(true);
             }
         }
+
+        /** Indicates if keyboard events are broadcast to all display objects, or dispatched
+         *  to the stage only. In some situations, it makes sense to deactivate this setting
+         *  for performance reasons. @default true */
+        public function get broadcastKeyboardEvents():Boolean { return mBroadcastKeyboardEvents; }
+        public function set broadcastKeyboardEvents(value:Boolean):void
+        {
+            mBroadcastKeyboardEvents = value;
+        }
         
         /** The TouchProcessor is passed all mouse and touch input and is responsible for
          *  dispatching TouchEvents to the Starling display tree. If you want to handle these
@@ -1114,11 +1144,15 @@ package starling.core
         }
         
         /** Indicates if the Context3D object is currently valid (i.e. it hasn't been lost or
-         *  disposed). Beware that each call to this method causes a String allocation (due to
-         *  internal code Starling can't avoid), so do not call this method too often. */
+         *  disposed). */
         public function get contextValid():Boolean
         {
-            return mContext && mContext.driverInfo != "Disposed";
+            if (mContext)
+            {
+                const driverInfo:String = mContext.driverInfo;
+                return driverInfo != null && driverInfo != "" && driverInfo != "Disposed";
+            }
+            else return false;
         }
 
         // static properties
@@ -1174,7 +1208,7 @@ package starling.core
          *  roll). It's recommended to always enable this property, while using the AssetManager
          *  for texture loading.</p>
          *  
-         *  @default false
+         *  @default true
          *  @see starling.utils.AssetManager
          */
         public static function get handleLostContext():Boolean { return sHandleLostContext; }
