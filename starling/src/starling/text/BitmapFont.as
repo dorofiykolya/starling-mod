@@ -54,6 +54,7 @@ package starling.text
      */ 
     public class BitmapFont
     {
+		public static var DEBUG:Boolean = false;
         /** Use this constant for the <code>fontSize</code> property of the TextField class to 
          *  render the bitmap font in exactly the size it was created. */ 
         public static const NATIVE_SIZE:int = -1;
@@ -66,15 +67,6 @@ package starling.text
         private static const CHAR_NEWLINE:int         = 10;
         private static const CHAR_CARRIAGE_RETURN:int = 13;
         
-        private var mTexture:Texture;
-        private var mChars:Dictionary;
-        private var mName:String;
-        private var mSize:Number;
-        private var mLineHeight:Number;
-        private var mBaseline:Number;
-        private var mOffsetX:Number;
-        private var mOffsetY:Number;
-        private var mHelperImage:Image;
         protected var mTexture:Texture;
         protected var mChars:Dictionary;
         protected var mName:String;
