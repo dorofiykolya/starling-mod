@@ -1,6 +1,7 @@
 package starling.display
 {
     import flash.geom.Matrix;
+    import flash.geom.Point;
     import flash.geom.Rectangle;
     import starling.utils.RectangleUtil;
     
@@ -14,6 +15,7 @@ package starling.display
         private static const HELP_RECT:Rectangle = new Rectangle();
         
         private var _contentArea:Rectangle;
+        private var _hitTestByContentSize:Boolean;
         
         public function SpriteBox()
         {
@@ -94,6 +96,19 @@ package starling.display
             _contentArea.height = value;
         }
         
+        /**
+         * only if touchableChildren == false
+         */
+        public function get hitTestByContentSize():Boolean
+        {
+            return _hitTestByContentSize;
+        }
+        
+        public function set hitTestByContentSize(value:Boolean):void
+        {
+            _hitTestByContentSize = value;
+        }
+        
         public function setContentSize(width:Number, height:Number):void
         {
             contentWidth = width;
@@ -104,6 +119,21 @@ package starling.display
         {
             contentWidth = super.width;
             contentHeight = super.height;
+        }
+        
+        override public function hitTest(localPoint:Point, forTouch:Boolean = false):DisplayObject
+        {
+            if (forTouch && (!visible || !touchable))
+                return null;
+            if (_hitTestByContentSize && !touchableChildren)
+            {
+                if (getBounds(this, HELP_RECT).containsPoint(localPoint))
+                {
+                    return this;
+                }
+                return null;
+            }
+            return super.hitTest(localPoint, forTouch);
         }
     }
 }
