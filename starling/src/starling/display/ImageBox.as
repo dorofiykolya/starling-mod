@@ -132,11 +132,11 @@ package starling.display
             
             if (mTexture && mImage.parent == null)
             {
-                AddChild(mImage);
+                insert(mImage);
             }
             else if (mTexture == null && mImage)
             {
-                mImage.RemoveFromParent();
+                mImage.cutFromParent();
             }
             
             validatePosition();
