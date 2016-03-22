@@ -142,6 +142,7 @@ package starling.text
             mAutoSize = TextFieldAutoSize.NONE;
             mHitArea = new Rectangle(0, 0, width, height);
             mLetterSpacing = 0.0;
+            mBatchable = true;
             this.fontName = fontName;
             
             addEventListener(Event.FLATTEN, onFlatten);
