@@ -131,6 +131,7 @@ package starling.utils
         private var mNumConnections:int;
         private var mVerbose:Boolean;
         private var mQueue:Array;
+		private var mKeepTextureAtlas:Boolean;
         
         private var mTextures:Dictionary;
         private var mAtlases:Dictionary;
@@ -712,7 +713,7 @@ package starling.utils
                     if (texture)
                     {
                         addTextureAtlas(name, new TextureAtlas(texture, xml));
-                        removeTexture(name, false);
+                        if(!mKeepTextureAtlas) removeTexture(name, false);
 
                         if (mKeepAtlasXmls) addXml(name, xml);
                         else System.disposeXML(xml);
@@ -727,8 +728,8 @@ package starling.utils
                     if (texture)
                     {
                         log("Adding bitmap font '" + name + "'");
-                        TextField.registerBitmapFont(new BitmapFont(texture, xml), name);
-                        removeTexture(name, false);
+                        TextField.registerBitmapFont(new BitmapFont(texture, xml), String(xml.info.@face));
+                        if(!mKeepTextureAtlas) removeTexture(name, false);
 
                         if (mKeepFontXmls) addXml(name, xml);
                         else System.disposeXML(xml);
@@ -1290,5 +1291,10 @@ package starling.utils
          *  More connections can reduce loading times, but require more memory. @default 3. */
         public function get numConnections():int { return mNumConnections; }
         public function set numConnections(value:int):void { mNumConnections = value; }
+		
+		/**
+		 */
+		public function get keepTextureAtlas():Boolean { return mKeepTextureAtlas; }
+        public function set keepTextureAtlas(value:Boolean):void { mKeepTextureAtlas = value; }
     }
 }
