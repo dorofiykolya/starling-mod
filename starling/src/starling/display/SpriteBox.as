@@ -67,6 +67,11 @@ package starling.display
             }
             return resultRect;
         }
+		
+		public function getChildrenBounds(targetSpace:DisplayObject, result:Rectangle = null):Rectangle
+		{
+			return super.getBounds(targetSpace, result);
+		}
         
         public function get contentWidth():Number
         {
