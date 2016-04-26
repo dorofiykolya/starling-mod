@@ -120,9 +120,9 @@ package starling.text
             var frameY:Number = frame ? frame.y : 0;
             
             mName = cleanMasterString(fontXml.info.@face);
-            mSize = parseFloat(fontXml.info.@size) / scale;
-            mLineHeight = parseFloat(fontXml.common.@lineHeight) / scale;
-            mBaseline = parseFloat(fontXml.common.@base) / scale;
+            mSize = parseFloat(fontXml.info.@size)// / scale;
+            mLineHeight = parseFloat(fontXml.common.@lineHeight)// / scale;
+            mBaseline = parseFloat(fontXml.common.@base)// / scale;
             
             if (fontXml.info.@smooth.toString() == "0")
                 smoothing = TextureSmoothing.NONE;
