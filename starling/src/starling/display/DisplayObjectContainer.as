@@ -502,5 +502,85 @@ package starling.display
                     getChildEventListeners(children[i], eventType, listeners);
             }
         }
+		
+		public function get children():Vector.<DisplayObject> { return _children; }
+		
+		/** Adds a child to the container. It will be at the frontmost position. */
+        public function insert(child:DisplayObject):DisplayObject
+        {
+            return insertAt(child, _children.length);
+        }
+        
+        /** Adds a child to the container at a certain index. */
+        public function insertAt(child:DisplayObject, index:int):DisplayObject
+        {
+            var numChildren:int = _children.length;
+
+            if (index >= 0 && index <= numChildren)
+            {
+                setRequiresRedraw();
+
+                if (child.parent == this)
+                {
+                    setChildIndex(child, index); // avoids dispatching events
+                }
+                else
+                {
+                    _children.insertAt(index, child);
+
+                    child.cutFromParent();
+                    child.setParent(this);
+                }
+                
+                return child;
+            }
+            else
+            {
+                throw new RangeError("Invalid child index");
+            }
+        }
+        
+        /** Removes a child from the container. If the object is not a child, the method returns
+         *  <code>null</code>. If requested, the child will be disposed right away. */
+        public function cut(child:DisplayObject, dispose:Boolean=false):DisplayObject
+        {
+            var childIndex:int = getChildIndex(child);
+            if (childIndex != -1) return cutAt(childIndex, dispose);
+            else return null;
+        }
+        
+        /** Removes a child at a certain index. The index positions of any display objects above
+         *  the child are decreased by 1. If requested, the child will be disposed right away. */
+        public function cutAt(index:int, dispose:Boolean=false):DisplayObject
+        {
+            if (index >= 0 && index < _children.length)
+            {
+                setRequiresRedraw();
+
+                var child:DisplayObject = _children[index];
+                
+                child.setParent(null);
+                index = _children.indexOf(child); // index might have changed by event handler
+                if (index >= 0) _children.removeAt(index);
+                if (dispose) child.dispose();
+                
+                return child;
+            }
+            else
+            {
+                throw new RangeError("Invalid child index");
+            }
+        }
+        
+        /** Removes a range of children from the container (endIndex included). 
+         *  If no arguments are given, all children will be removed. */
+        public function cutChildren(beginIndex:int=0, endIndex:int=-1, dispose:Boolean=false):void
+        {
+            if (endIndex < 0 || endIndex >= numChildren) 
+                endIndex = numChildren - 1;
+            
+            for (var i:int=beginIndex; i<=endIndex; ++i)
+                cutAt(beginIndex, dispose);
+        }
     }
 }

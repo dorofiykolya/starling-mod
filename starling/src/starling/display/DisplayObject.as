@@ -139,6 +139,8 @@ package starling.display
         private var _orientationChanged:Boolean;
         private var _is3D:Boolean;
         private var _isMask:Boolean;
+		private var _includeInParentBounds:Boolean;
+        private var _saturated:Boolean;
 
         // internal members (for fast access on rendering)
 
@@ -178,6 +180,8 @@ package starling.display
             _visible = _touchable = _hasVisibleArea = true;
             _blendMode = BlendMode.AUTO;
             _transformationMatrix = new Matrix();
+			_includeInParentBounds = true;
+			_saturated = true;
         }
         
         /** Disposes all resources of the display object. 
@@ -1110,5 +1114,41 @@ package starling.display
         /** The stage the display object is connected to, or null if it is not connected 
          *  to the stage. */
         public function get stage():Stage { return this.base as Stage; }
+		
+		public function resetTransform():void
+        {
+            _x = _y = _pivotX = _pivotY = _rotation = _skewX = _skewY = 0.0;
+            _scaleX = _scaleY = _alpha = 1.0;            
+            _visible = _touchable = true;
+            _blendMode = BlendMode.AUTO;
+            _transformationMatrix.identity();
+            _transformationMatrix3D.identity();
+            _useHandCursor = false;
+            _orientationChanged = true;
+            _includeInParentBounds = true;
+            _saturated = true;
+        }
+		
+		/** include in parent bounds */
+        public function get includeInParentBounds():Boolean { return _includeInParentBounds; }
+        public function set includeInParentBounds(value:Boolean):void { _includeInParentBounds = value; }
+        
+        /** is object saturated */
+        public function get saturated():Boolean { return _saturated; }
+        public function set saturated(value:Boolean):void { _saturated = value; };
+        
+        /** Removes the object from its parent, if it has one, and optionally disposes it. */
+        public function cutFromParent(dispose:Boolean=false):void
+        {
+            if (_parent) 
+            {
+                _parent.cut(this, dispose);
+                _parent = null;
+            }
+            if (dispose) 
+            {
+                this.dispose();
+            }
+        }
     }
 }
