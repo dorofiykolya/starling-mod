@@ -6,15 +6,15 @@ package starling.display
 	 */
 	public class ColorTransform 
 	{
-		public var alphaMultiplier : Number = 1;
-		public var redMultiplier : Number = 1;
-		public var greenMultiplier : Number = 1;
-		public var blueMultiplier : Number = 1;
+		public var alphaMultiplier : Number = 1.0;
+		public var redMultiplier : Number = 1.0;
+		public var greenMultiplier : Number = 1.0;
+		public var blueMultiplier : Number = 1.0;
 		
-		public var alpha : Number = 255;
-		public var red : Number = 255;
-		public var green : Number = 255;
-		public var blue : Number = 255;
+		public var alpha : Number = 255.0;
+		public var red : Number = 255.0;
+		public var green : Number = 255.0;
+		public var blue : Number = 255.0;
 		
 		public function ColorTransform(red:Number = 255.0, green:Number = 255.0, blue:Number = 255.0, alpha:Number = 255.0, redMultiplier:Number = 1.0, greenMultiplier:Number = 1.0, blueMultiplier:Number = 1.0, alphaMultiplier:Number = 1.0)
 		{
@@ -27,6 +27,36 @@ package starling.display
 			this.red = red;
 			this.green = green;
 			this.blue = blue;
+		}
+		
+		/**
+		 * 
+		 * @param	left
+		 * @param	right
+		 * @param	ratio  0-1
+		 * @param	result
+		 * @return
+		 */
+		public static function interpolate(left:ColorTransform, right:ColorTransform, ratio:Number, result:ColorTransform = null):ColorTransform
+		{
+			if (result == null) result = new ColorTransform();
+			
+			result.alpha = interpolateValue(left.alpha, right.alpha, ratio);
+			result.red = interpolateValue(left.red, right.red, ratio);
+			result.blue = interpolateValue(left.blue, right.blue, ratio);
+			result.green = interpolateValue(left.green, right.green, ratio);
+			
+			result.alphaMultiplier = interpolateValue(left.alphaMultiplier, right.alphaMultiplier, ratio);
+			result.redMultiplier = interpolateValue(left.redMultiplier, right.redMultiplier, ratio);
+			result.blueMultiplier = interpolateValue(left.blueMultiplier, right.blueMultiplier, ratio);
+			result.greenMultiplier = interpolateValue(left.greenMultiplier, right.greenMultiplier, ratio);
+			
+			return result;
+		}
+		
+		private static function interpolateValue(left:Number, right:Number, amount:Number):Number
+		{
+			return left * (1 - amount) + right * amount;
 		}
 		
 		/**
