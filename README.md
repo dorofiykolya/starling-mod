@@ -1,19 +1,22 @@
-(MODE)
-add class:
+#add class:
  - SpriteBox
  - ImageBox
  - ColorTransform
- - MultiSprite - render max 4 textures - 1 drawCall
-add property:
+ - MultiSprite render max 4 textures 1 drawCall
+
+------------------------------
+#add property:
  - DisplayObject saturation:Boolean; display as grayscale
  - DisplayObject includeInParentBounds:Boolean;
  - DisplayObjectContainer touchableChildren:Boolean;
  - Quad colorTransform:ColorTransform;
  - TextField letterSpacing:Number;
  - QuadBatch saturated:Boolean;
-add method:
- - DisplayObject resetTransform();
- - DisplayObject cutFromParent(dispose:Boolean=false); Removes the object from its parent without dispatch event, if it has one, and optionally disposes it.
+
+------------------------------
+#add method:
+ - DisplayObject resetTransform;
+ - DisplayObject cutFromParent; Removes the object from its parent without dispatch event, if it has one, and optionally disposes it.
  - DisplayObjectContainer insert; addChild without dispatch event
  - DisplayObjectContainer insertAt; addChildAt without dispatch event
  - DisplayObjectContainer cut; removeChild without dispatch event
